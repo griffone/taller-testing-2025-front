@@ -1,0 +1,38 @@
+<div class="p-mb-4">
+    <h2>Gestión de Marcas</h2>
+</div>
+
+<p-panel header="Agregar Marca">
+    <form (ngSubmit)="addMarca()" #marcaForm="ngForm">
+        <div class="p-fluid flex justify-between">
+            <div class="p-field">
+                <label for="nombre" class="mr-3">Nombre</label>
+                <input class="w-64" id="nombre" pInputText [(ngModel)]="newMarca.nombre" type="text" name="nombre" placeholder="Insertar el nombre de la marca" required />
+                <label for="estado" class="ml-3 mr-3">Estado</label>
+                <p-dropdown [options]="estadoOptions" [(ngModel)]="newMarca.estado" optionLabel="label" optionValue="value" name="estado" placeholder="Seleccionar estado" required></p-dropdown>
+            </div>
+            <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!marcaForm.valid" />
+        </div>
+    </form>
+</p-panel>
+<p-table [value]="marcas" [paginator]="true" [rows]="10" [responsiveLayout]="'scroll'">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-marca>
+        <tr>
+            <td>{{ marca.id }}</td>
+            <td>{{ marca.nombre }}</td>
+            <td>{{ marca.estado }}</td>
+            <td>
+                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editMarca(marca)"></button>
+                <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteMarca(marca.id)"></button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>
