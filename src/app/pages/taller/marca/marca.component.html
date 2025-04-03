@@ -2,6 +2,9 @@
     <h2>Gestión de Marcas</h2>
 </div>
 
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <p-panel header="Agregar Marca">
     <form (ngSubmit)="addMarca()" #marcaForm="ngForm">
         <div class="p-fluid flex justify-between">
@@ -15,7 +18,11 @@
         </div>
     </form>
 </p-panel>
-<p-table [value]="marcas" [paginator]="true" [rows]="10" [responsiveLayout]="'scroll'">
+<br />
+<p-table [value]="marcas" [paginator]="true" [rows]="pageSize" 
+         [totalRecords]="totalRecords" 
+         [responsiveLayout]="'scroll'"
+         (onPage)="paginate($event)">
     <ng-template pTemplate="header">
         <tr>
             <th>ID</th>
@@ -30,9 +37,14 @@
             <td>{{ marca.nombre }}</td>
             <td>{{ marca.estado }}</td>
             <td>
-                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editMarca(marca)"></button>
+                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning mr-2" (click)="editMarca(marca)"></button>
                 <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteMarca(marca.id)"></button>
             </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="4" class="text-center">No hay marcas disponibles</td>
         </tr>
     </ng-template>
 </p-table>
