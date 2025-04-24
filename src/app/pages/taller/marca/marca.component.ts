@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
+import { DialogModule } from 'primeng/dialog';
 
 interface Marca {
     id: number;
@@ -27,7 +28,8 @@ interface Marca {
         ButtonModule, 
         DropdownModule,
         ToastModule,
-        ConfirmDialogModule
+        ConfirmDialogModule,
+        DialogModule
     ], 
     providers: [MessageService, ConfirmationService],
     templateUrl: './marca.component.html',
@@ -40,6 +42,10 @@ export class MarcaComponent implements OnInit {
     totalRecords: number = 0;
     currentPage: number = 0;
     pageSize: number = 10;
+    showInactiveDialog: boolean = false;
+    inactiveMarcas: Marca[] = [];
+    showEditDialog: boolean = false;
+    selectedMarca: any = {};
 
     constructor(
         private marcaService: MarcaService,
@@ -68,6 +74,22 @@ export class MarcaComponent implements OnInit {
                     detail: 'Error al cargar las marcas'
                 });
                 console.error('Error loading marcas', err);
+            }
+        });
+    }
+
+    loadInactiveMarcas(): void {
+        this.marcaService.mostrar().subscribe({
+            next: (data) => {
+                this.inactiveMarcas = data.filter(marca => marca.estado === false);
+            },
+            error: (err) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Error al cargar las marcas inactivas'
+                });
+                console.error('Error loading inactive marcas', err);
             }
         });
     }
@@ -114,37 +136,35 @@ export class MarcaComponent implements OnInit {
     }
 
     editMarca(marca: Marca): void {
-        const updatedNombre = prompt('Editar nombre de la marca:', marca.nombre);
-        const updatedEstado = prompt('Editar estado de la marca (Activo/Inactivo):', marca.estado ? 'Activo' : 'Inactivo');
-        
-        if (updatedNombre !== null && updatedEstado !== null && 
-            (updatedEstado === 'Activo' || updatedEstado === 'Inactivo')) {
-            
-            const updatedMarca = {
-                ...marca,
-                nombre: updatedNombre,
-                estado: updatedEstado === 'Activo'
-            };
-            
-            this.marcaService.actualizar(marca.id, updatedMarca).subscribe({
-                next: () => {
-                    this.messageService.add({
-                        severity: 'success',
-                        summary: 'Éxito',
-                        detail: 'Marca actualizada correctamente'
-                    });
-                    this.loadMarcas();
-                },
-                error: (err) => {
-                    this.messageService.add({
-                        severity: 'error',
-                        summary: 'Error',
-                        detail: 'Error al actualizar marca'
-                    });
-                    console.error('Error updating marca', err);
-                }
-            });
-        }
+        this.selectedMarca = { ...marca };
+        this.showEditDialog = true;
+    }
+
+    onEditMarcaSubmit(): void {
+        const updatedMarca = {
+            ...this.selectedMarca,
+            estado: this.selectedMarca.estado === 'Activo'
+        };
+
+        this.marcaService.actualizar(this.selectedMarca.id, updatedMarca).subscribe({
+            next: () => {
+                this.messageService.add({
+                    severity: 'success',
+                    summary: 'Éxito',
+                    detail: 'Marca actualizada correctamente'
+                });
+                this.showEditDialog = false;
+                this.loadMarcas();
+            },
+            error: (err) => {
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Error al actualizar la marca'
+                });
+                console.error('Error updating marca', err);
+            }
+        });
     }
 
     deleteMarca(id: number): void {
@@ -174,8 +194,39 @@ export class MarcaComponent implements OnInit {
         });
     }
 
+    restoreMarca(id: number): void {
+        const marcaToRestore = this.inactiveMarcas.find(marca => marca.id === id);
+        if (marcaToRestore) {
+            const updatedMarca = { ...marcaToRestore, estado: true };
+            this.marcaService.actualizar(id, updatedMarca).subscribe({
+                next: () => {
+                    this.messageService.add({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: 'Marca restaurada correctamente'
+                    });
+                    this.loadMarcas();
+                    this.loadInactiveMarcas();
+                },
+                error: (err) => {
+                    this.messageService.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Error al restaurar la marca'
+                    });
+                    console.error('Error restoring marca', err);
+                }
+            });
+        }
+    }
+
     paginate(event: any): void {
         this.currentPage = event.page;
         this.loadMarcas();
+    }
+
+    onShowInactiveDialog(): void {
+        this.showInactiveDialog = true;
+        this.loadInactiveMarcas();
     }
 }
