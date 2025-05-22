@@ -8,11 +8,8 @@
 <p-panel header="Agregar Marca">
     <form (ngSubmit)="addMarca()" #marcaForm="ngForm">
         <div class="p-fluid flex justify-between">
-            <div class="p-field">
-                <label for="nombre" class="mr-3">Nombre</label>
+            <div class="p-field">                <label for="nombre" class="mr-3">Nombre</label>
                 <input class="w-64" id="nombre" pInputText [(ngModel)]="newMarca.nombre" type="text" name="nombre" placeholder="Insertar el nombre de la marca" required />
-                <label for="estado" class="ml-3 mr-3">Estado</label>
-                <p-dropdown [options]="estadoOptions" [(ngModel)]="newMarca.estado" optionLabel="label" optionValue="value" name="estado" placeholder="Seleccionar estado" required></p-dropdown>
             </div>
             <div>
                 <p-button label="Inactivas" icon="pi pi-history" iconPos="right" class="mr-3" (click)="onShowInactiveDialog()"></p-button>
@@ -78,14 +75,9 @@
 <!-- Edit Dialog -->
 <p-dialog header="Editar Marca" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '30vw' }">
     <form (ngSubmit)="onEditMarcaSubmit()" #editMarcaForm="ngForm">
-        <div class="p-fluid">
-            <div class="p-field">
+        <div class="p-fluid">            <div class="p-field">
                 <label for="editNombre">Nombre</label>
                 <input id="editNombre" pInputText [(ngModel)]="selectedMarca.nombre" name="editNombre" required />
-            </div>
-            <div class="p-field">
-                <label for="editEstado">Estado</label>
-                <p-dropdown [options]="estadoOptions" [(ngModel)]="selectedMarca.estado" optionLabel="label" optionValue="value" name="editEstado" required></p-dropdown>
             </div>
         </div>
         <div class="p-dialog-footer">

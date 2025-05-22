@@ -1,1 +1,99 @@
-<p>modelo works!</p>
+<div class="p-mb-4">
+    <h2>Gestión de Modelos</h2>
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-panel header="Agregar Modelo">
+    <form (ngSubmit)="addModelo()" #modeloForm="ngForm">
+        <div class="p-fluid flex justify-between">
+            <div class="p-field">
+                <label for="nombre" class="mr-3">Nombre</label>
+                <input class="w-64" id="nombre" pInputText [(ngModel)]="newModelo.nombre" type="text" name="nombre" placeholder="Insertar el nombre del modelo" required />
+                  <label for="marca" class="ml-3 mr-3">Marca</label>
+                <p-dropdown [options]="marcaOptions" [(ngModel)]="newModelo.marca" optionLabel="label" optionValue="value" name="marca" placeholder="Seleccionar marca" required></p-dropdown>
+            </div>
+            <div>
+                <p-button label="Inactivos" icon="pi pi-history" iconPos="right" class="mr-3" (click)="onShowInactiveDialog()"></p-button>
+                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!modeloForm.valid" />
+            </div>
+        </div>
+    </form>
+</p-panel>
+<br />
+<p-table [value]="modelos" [paginator]="true" [rows]="pageSize" 
+         [totalRecords]="totalRecords" 
+         [responsiveLayout]="'scroll'"
+         (onPage)="paginate($event)">
+    <ng-template pTemplate="header">
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Marca</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-modelo>
+        <tr>
+            <td>{{ modelo.id }}</td>
+            <td>{{ modelo.nombre }}</td>
+            <td>{{ modelo.marca?.nombre }}</td>
+            <td>
+                <button pButton icon="pi pi-pencil" class="p-button p-button-warning mr-2" (click)="editModelo(modelo)">Editar</button>
+                <button pButton icon="pi pi-trash" class="p-button p-button-danger" (click)="deleteModelo(modelo.id)">Desactivar</button>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="4" class="text-center">No hay modelos disponibles</td>
+        </tr>
+    </ng-template>
+</p-table>
+<!-- Dialog to Show Inactive Models -->
+<p-dialog header="Modelos Inactivos" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '50vw' }">
+    <p-table [value]="inactiveModelos" [responsiveLayout]="'scroll'">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Marca</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-modelo>
+            <tr>
+                <td>{{ modelo.id }}</td>
+                <td>{{ modelo.nombre }}</td>
+                <td>{{ modelo.marca?.nombre }}</td>
+                <td>
+                    <button pButton label="Restaurar" icon="pi pi-refresh" class="p-button p-button-secondary" (click)="restoreModelo(modelo.id)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="4" class="text-center">No hay modelos inactivos</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+<!-- Edit Dialog -->
+<p-dialog header="Editar Modelo" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '30vw' }">
+    <form (ngSubmit)="onEditModeloSubmit()" #editModeloForm="ngForm">
+        <div class="p-fluid">
+            <div class="p-field">
+                <label for="editNombre">Nombre</label>
+                <input id="editNombre" pInputText [(ngModel)]="selectedModelo.nombre" name="editNombre" required />
+            </div>            <div class="p-field">
+                <label for="editMarca">Marca</label>
+                <p-dropdown [options]="marcaOptions" [(ngModel)]="selectedModelo.marca" optionLabel="label" optionValue="value" name="editMarca" required></p-dropdown>
+            </div>
+        </div>
+        <div class="p-dialog-footer">
+            <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="showEditDialog = false"></button>
+            <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="!editModeloForm.valid"></button>
+        </div>
+    </form>
+</p-dialog>

@@ -51,13 +51,7 @@ export class MarcaComponent implements OnInit {
         private marcaService: MarcaService,
         private messageService: MessageService,
         private confirmationService: ConfirmationService
-    ) {}
-
-    ngOnInit(): void {
-        this.estadoOptions = [
-            { label: 'Activo', value: 'Activo' },
-            { label: 'Inactivo', value: 'Inactivo' }
-        ];
+    ) {}    ngOnInit(): void {
         this.loadMarcas();
         this.getTotalRecords();
     }
@@ -103,14 +97,11 @@ export class MarcaComponent implements OnInit {
                 console.error('Error getting total records', err);
             }
         });
-    }
-
-    addMarca(): void {
-        if (this.newMarca.nombre && this.newMarca.estado !== undefined) {
-            const estadoBoolean = this.newMarca.estado === 'Activo';
+    }    addMarca(): void {
+        if (this.newMarca.nombre) {
             const newMarcaToSave = {
                 ...this.newMarca,
-                estado: estadoBoolean
+                estado: true  // Always set as active
             };
             this.marcaService.guardar(newMarcaToSave).subscribe({
                 next: (response) => {
@@ -138,12 +129,10 @@ export class MarcaComponent implements OnInit {
     editMarca(marca: Marca): void {
         this.selectedMarca = { ...marca };
         this.showEditDialog = true;
-    }
-
-    onEditMarcaSubmit(): void {
+    }    onEditMarcaSubmit(): void {
         const updatedMarca = {
             ...this.selectedMarca,
-            estado: this.selectedMarca.estado === 'Activo'
+            estado: true  // Always set as active
         };
 
         this.marcaService.actualizar(this.selectedMarca.id, updatedMarca).subscribe({
