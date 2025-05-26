@@ -8,7 +8,7 @@ import { Observable } from 'rxjs';
 export class ModeloService {
     private baseUrl = 'http://localhost:8080/modelo';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) { }
 
     guardar(modelo: any): Observable<any> {
         return this.http.post(`${this.baseUrl}/guardar`, modelo);
@@ -20,6 +20,10 @@ export class ModeloService {
 
     mostrarHabilitados(): Observable<any[]> {
         return this.http.get<any[]>(`${this.baseUrl}/mostrarHabilitados`);
+    }
+
+    mostrarInhabilitados(): Observable<any[]> {
+        return this.http.get<any[]>(`${this.baseUrl}/mostrarInhabilitados`);
     }
 
     mostrarPaginado(page: number = 0, size: number = 10): Observable<any[]> {

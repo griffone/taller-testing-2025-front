@@ -29,16 +29,16 @@ interface Marca {
 @Component({
     selector: 'app-modelo',
     imports: [
-        Panel, 
-        FormsModule, 
-        TableModule, 
-        InputTextModule, 
-        ButtonModule, 
+        Panel,
+        FormsModule,
+        TableModule,
+        InputTextModule,
+        ButtonModule,
         DropdownModule,
         ToastModule,
         ConfirmDialogModule,
         DialogModule
-    ], 
+    ],
     providers: [MessageService, ConfirmationService],
     templateUrl: './modelo.component.html',
     styleUrl: './modelo.component.scss'
@@ -61,7 +61,9 @@ export class ModeloComponent implements OnInit {
         private marcaService: MarcaService,
         private messageService: MessageService,
         private confirmationService: ConfirmationService
-    ) {}    ngOnInit(): void {
+    ) { }
+
+    ngOnInit(): void {
         this.loadModelos();
         this.getTotalRecords();
         this.loadMarcas();
@@ -103,7 +105,7 @@ export class ModeloComponent implements OnInit {
     }
 
     loadInactiveModelos(): void {
-        this.modeloService.mostrar().subscribe({
+        this.modeloService.mostrarInhabilitados().subscribe({
             next: (data) => {
                 this.inactiveModelos = data.filter(modelo => modelo.estado === false);
             },
@@ -127,7 +129,9 @@ export class ModeloComponent implements OnInit {
                 console.error('Error getting total records', err);
             }
         });
-    }    addModelo(): void {
+    }
+
+    addModelo(): void {
         if (this.newModelo.nombre && this.newModelo.marca) {
             const newModeloToSave = {
                 ...this.newModelo,
@@ -154,13 +158,17 @@ export class ModeloComponent implements OnInit {
                 }
             });
         }
-    }    editModelo(modelo: Modelo): void {
-        this.selectedModelo = { 
+    }
+
+    editModelo(modelo: Modelo): void {
+        this.selectedModelo = {
             ...modelo,
             marca: this.marcaOptions.find(m => m.value.id === modelo.marca.id)?.value
         };
         this.showEditDialog = true;
-    }    onEditModeloSubmit(): void {
+    }
+
+    onEditModeloSubmit(): void {
         const updatedModelo = {
             ...this.selectedModelo,
             estado: true  // Always set as active

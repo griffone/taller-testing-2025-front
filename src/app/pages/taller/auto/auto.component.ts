@@ -9,17 +9,19 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DropdownModule } from 'primeng/dropdown';
 import { TagModule } from 'primeng/tag';
 import { Table } from 'primeng/table';
 import { MessageService } from 'primeng/api';
 import { ConfirmationService } from 'primeng/api';
 
 import { AutoService, Auto } from '../../service/auto.service';
+import { MarcaService } from '../../service/marca.service';
+import { ModeloService } from '../../service/modelo.service';
 
 @Component({
   selector: 'app-auto',
-  standalone: true,
-  imports: [
+  standalone: true, imports: [
     CommonModule,
     FormsModule,
     ButtonModule,
@@ -30,6 +32,7 @@ import { AutoService, Auto } from '../../service/auto.service';
     DialogModule,
     ToastModule,
     ConfirmDialogModule,
+    DropdownModule,
     TagModule
   ],
   providers: [MessageService, ConfirmationService],
@@ -38,21 +41,63 @@ import { AutoService, Auto } from '../../service/auto.service';
 })
 export class AutoComponent implements OnInit {
   @ViewChild('dt') dt: Table | undefined;
-
   autos: Auto[] = [];
   auto: Partial<Auto> = {};
   editingAuto: Auto = {} as Auto;
   autoDialog: boolean = false;
   loading: boolean = true;
+  marcaOptions: any[] = [];
+  modeloOptions: any[] = [];
+  selectedMarca: any = null;
 
   constructor(
     private autoService: AutoService,
+    private marcaService: MarcaService,
+    private modeloService: ModeloService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
-  ) {}
-
+  ) { }
   ngOnInit() {
     this.loadAutos();
+    this.loadMarcas();
+  }
+
+  loadMarcas() {
+    this.marcaService.mostrarHabilitados().subscribe({
+      next: (marcas) => {
+        this.marcaOptions = marcas.map(marca => ({
+          label: marca.nombre,
+          value: marca
+        }));
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar las marcas'
+        });
+        console.error('Error cargando marcas:', error);
+      }
+    });
+  }
+
+  loadModelosByMarca(marcaId: number) {
+    this.modeloService.mostrarXMarca(marcaId).subscribe({
+      next: (modelos) => {
+        this.modeloOptions = modelos.filter(modelo => modelo.estado).map(modelo => ({
+          label: modelo.nombre,
+          value: modelo
+        }));
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar los modelos'
+        });
+        console.error('Error cargando modelos:', error);
+      }
+    });
   }
 
   loadAutos() {
@@ -93,16 +138,55 @@ export class AutoComponent implements OnInit {
         });
       }
     });
-  }
-
-  editAuto(auto: Auto) {
+  } editAuto(auto: Auto) {
+    console.log('Auto a editar:', auto);
+    // Hacemos una copia profunda del auto para no modificar el original
     this.editingAuto = { ...auto };
-    this.autoDialog = true;
-  }
 
-  saveEditedAuto() {
+    try {
+      // Si el auto tiene un modelo con marca, seleccionamos la correcta en las opciones
+      if (auto.modelo && typeof auto.modelo === 'object' && auto.modelo.marca) {
+        const marcaId = auto.modelo.marca.id;
+
+        // Buscamos la marca en las opciones disponibles
+        const marcaOption = this.marcaOptions.find(m => m.value.id === marcaId);
+        if (marcaOption) {
+          this.selectedMarca = marcaOption.value;
+
+          // Cargamos los modelos correspondientes a esta marca
+          this.loadModelosByMarca(marcaId);
+
+          // Una vez que tengamos los modelos, seleccionamos el modelo correcto
+          setTimeout(() => {
+            if (auto.modelo && typeof auto.modelo === 'object' && auto.modelo.id) {
+              const modeloOption = this.modeloOptions.find(m => m.value.id === auto.modelo.id);
+              if (modeloOption) {
+                this.editingAuto.modelo = modeloOption.value;
+              }
+            }
+          }, 300);
+        }
+      }
+    } catch (error) {
+      console.error('Error al preparar el formulario de edición:', error);
+    }
+
+    this.autoDialog = true;
+  } saveEditedAuto() {
     if (this.editingAuto.id) {
-      this.autoService.editar(this.editingAuto.id, this.editingAuto).subscribe({
+      // Asegurarse de que los datos estén correctamente formateados antes de enviarlos
+      const autoToUpdate = {
+        ...this.editingAuto,
+        // Si el modelo es un objeto del dropdown, usamos su valor
+        modelo: typeof this.editingAuto.modelo === 'object' && this.editingAuto.modelo ?
+          this.editingAuto.modelo : this.editingAuto.modelo,
+        // Aseguramos que se mantenga activo
+        estado: true
+      };
+
+      console.log('Auto a actualizar:', autoToUpdate);
+
+      this.autoService.editar(this.editingAuto.id, autoToUpdate).subscribe({
         next: (response) => {
           this.messageService.add({
             severity: 'success',
@@ -118,6 +202,7 @@ export class AutoComponent implements OnInit {
             summary: 'Error',
             detail: 'Error al actualizar el auto'
           });
+          console.error('Error actualizando auto:', error);
         }
       });
     }

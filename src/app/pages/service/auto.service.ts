@@ -5,12 +5,11 @@ import { Observable } from 'rxjs';
 export interface Auto {
   id?: number;
   patente: string;
-  marca: string;
-  modelo: string;
+  marca?: any; // Para compatibilidad
+  modelo: any; // Cambio a objeto para reflejar el uso real
   anio: number;
-  kilometraje: number;
-  cilindrada: number;
   estado?: boolean;
+  cliente?: any; // Añadido porque se usa en el template
 }
 
 @Injectable({
