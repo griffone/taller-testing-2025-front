@@ -82,12 +82,32 @@ export class AutoComponent implements OnInit {
   }
 
   loadModelosByMarca(marcaId: number) {
+    // Guardamos el modelo actual para comparar
+    const currentModeloId = this.editingAuto?.modelo?.id;
+    
+    // Reseteamos el modelo seleccionado solo si fue cambiado manualmente por el usuario
+    // Si la marca actual no coincide con la marca del modelo, es un cambio manual
+    if (this.editingAuto?.modelo?.marca?.id !== marcaId) {
+      this.editingAuto.modelo = null;
+    }
+    
+    console.log('Cargando modelos para la marca ID:', marcaId);
     this.modeloService.mostrarXMarca(marcaId).subscribe({
       next: (modelos) => {
         this.modeloOptions = modelos.filter(modelo => modelo.estado).map(modelo => ({
           label: modelo.nombre,
           value: modelo
         }));
+        console.log('Modelos cargados:', this.modeloOptions);
+        
+        // Si teníamos un modelo seleccionado y coincide con la marca, lo restauramos
+        if (currentModeloId) {
+          const modeloFound = this.modeloOptions.find(m => m.value.id === currentModeloId);
+          if (modeloFound) {
+            console.log('Restaurando modelo previo:', modeloFound);
+            this.editingAuto.modelo = modeloFound.value;
+          }
+        }
       },
       error: (error) => {
         this.messageService.add({
@@ -107,6 +127,8 @@ export class AutoComponent implements OnInit {
         this.autos = data;
         this.loading = false;
         console.log('Autos traidos del back:', data);
+        // Ordenar data por patente
+        this.autos.sort((a, b) => a.patente.localeCompare(b.patente));
       },
       error: (error) => {
         this.messageService.add({
@@ -138,33 +160,46 @@ export class AutoComponent implements OnInit {
         });
       }
     });
-  } editAuto(auto: Auto) {
+  }  editAuto(auto: Auto) {
     console.log('Auto a editar:', auto);
     // Hacemos una copia profunda del auto para no modificar el original
     this.editingAuto = { ...auto };
 
     try {
-      // Si el auto tiene un modelo con marca, seleccionamos la correcta en las opciones
+      // Si el auto tiene un modelo con marca
       if (auto.modelo && typeof auto.modelo === 'object' && auto.modelo.marca) {
         const marcaId = auto.modelo.marca.id;
-
+        
         // Buscamos la marca en las opciones disponibles
-        const marcaOption = this.marcaOptions.find(m => m.value.id === marcaId);
-        if (marcaOption) {
-          this.selectedMarca = marcaOption.value;
-
-          // Cargamos los modelos correspondientes a esta marca
+        const marcaEncontrada = this.marcaOptions.find(m => m.value.id === marcaId);
+        if (marcaEncontrada) {
+          console.log('Marca encontrada:', marcaEncontrada);
+          // Seleccionamos directamente el objeto completo de la opción (que ya tiene la estructura correcta)
+          this.selectedMarca = marcaEncontrada.value;
+          
+          // Cargamos los modelos para esta marca
           this.loadModelosByMarca(marcaId);
-
-          // Una vez que tengamos los modelos, seleccionamos el modelo correcto
+          
+          // Esperamos a que se carguen los modelos y luego seleccionamos el correcto
           setTimeout(() => {
-            if (auto.modelo && typeof auto.modelo === 'object' && auto.modelo.id) {
-              const modeloOption = this.modeloOptions.find(m => m.value.id === auto.modelo.id);
-              if (modeloOption) {
-                this.editingAuto.modelo = modeloOption.value;
+            if (auto.modelo && auto.modelo.id) {
+              const modeloId = auto.modelo.id;
+              
+              // Buscamos el modelo en las opciones cargadas
+              const modeloEncontrado = this.modeloOptions.find(m => m.value.id === modeloId);
+              if (modeloEncontrado) {
+                console.log('Modelo encontrado:', modeloEncontrado);
+                // Seleccionamos el objeto completo (no solo el valor)
+                this.editingAuto.modelo = modeloEncontrado.value;
+              } else {
+                console.warn('No se encontró el modelo con ID:', modeloId, 'en las opciones disponibles');
+                // Si no encontramos el modelo, al menos mantener una referencia
+                this.editingAuto.modelo = auto.modelo;
               }
             }
-          }, 300);
+          }, 500);
+        } else {
+          console.warn('No se encontró la marca con ID:', marcaId, 'en las opciones disponibles');
         }
       }
     } catch (error) {
@@ -172,14 +207,23 @@ export class AutoComponent implements OnInit {
     }
 
     this.autoDialog = true;
-  } saveEditedAuto() {
+  }  saveEditedAuto() {
     if (this.editingAuto.id) {
+      // Validamos que tengamos un modelo seleccionado
+      if (!this.editingAuto.modelo) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Debe seleccionar un modelo de auto'
+        });
+        return;
+      }
+      
       // Asegurarse de que los datos estén correctamente formateados antes de enviarlos
       const autoToUpdate = {
         ...this.editingAuto,
-        // Si el modelo es un objeto del dropdown, usamos su valor
-        modelo: typeof this.editingAuto.modelo === 'object' && this.editingAuto.modelo ?
-          this.editingAuto.modelo : this.editingAuto.modelo,
+        // Aseguramos que el modelo esté correctamente asignado
+        modelo: this.editingAuto.modelo, 
         // Aseguramos que se mantenga activo
         estado: true
       };
@@ -235,9 +279,41 @@ export class AutoComponent implements OnInit {
     });
   }
 
+  switchStatusAuto(auto: Auto) {
+    const newStatus = !auto.estado;
+    // Función de editar del servicio
+    if (auto.id !== undefined) {
+      this.autoService.editar(auto.id, { ...auto, estado: newStatus }).subscribe({
+        next: (response) => {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Éxito',
+            detail: `Auto ${newStatus ? 'habilitado' : 'deshabilitado'} correctamente`
+          });
+          this.loadAutos();
+        },
+        error: (error) => {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: `Error al ${newStatus ? 'habilitar' : 'deshabilitar'} el auto`
+          });
+        }
+      });
+    } else {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'El auto no tiene un ID válido'
+      });
+    }
+  }
+
   hideDialog() {
     this.autoDialog = false;
     this.editingAuto = {} as Auto;
+    this.selectedMarca = null;
+    this.modeloOptions = [];
   }
 
   clear(table: Table) {

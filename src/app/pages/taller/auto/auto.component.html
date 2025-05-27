@@ -4,35 +4,38 @@
 
 <p-panel header="Agregar Auto">
     <form (ngSubmit)="saveAuto()" #autoForm="ngForm">
-        <div class="p-fluid grid">
-            <div class="col-12 md:col-6 lg:col-3">
-                <div class="p-field">
-                    <label for="patente">Patente</label>
-                    <input id="patente" pInputText [(ngModel)]="auto.patente" type="text" name="patente"
-                        placeholder="Insertar la patente" required />
+        <div class="p-fluid flex justify-between">
+            <div class="flex flex-wrap gap-4">
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="patente">Patente</label>
+                        <input id="patente" pInputText [(ngModel)]="auto.patente" type="text" name="patente"
+                            placeholder="Insertar la patente" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="marca">Marca</label>
+                        <input id="marca" pInputText [(ngModel)]="auto.marca" type="text" name="marca"
+                            placeholder="Insertar la marca" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="modelo">Modelo</label>
+                        <input id="modelo" pInputText [(ngModel)]="auto.modelo" type="text" name="modelo"
+                            placeholder="Insertar el modelo" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="anio">Año</label>
+                        <p-inputNumber id="anio" [(ngModel)]="auto.anio" name="anio" placeholder="Insertar el año"
+                            [min]="1900" [max]="2025" required />
+                    </div>
                 </div>
             </div>
-            <div class="col-12 md:col-6 lg:col-3">
-                <div class="p-field">
-                    <label for="marca">Marca</label>
-                    <input id="marca" pInputText [(ngModel)]="auto.marca" type="text" name="marca"
-                        placeholder="Insertar la marca" required />
-                </div>
-            </div>
-            <div class="col-12 md:col-6 lg:col-3">
-                <div class="p-field">
-                    <label for="modelo">Modelo</label>
-                    <input id="modelo" pInputText [(ngModel)]="auto.modelo" type="text" name="modelo"
-                        placeholder="Insertar el modelo" required />
-                </div>
-            </div>
-            <div class="col-12 md:col-6 lg:col-3">
-                <div class="p-field">
-                    <label for="anio">Año</label>
-                    <p-inputNumber id="anio" [(ngModel)]="auto.anio" name="anio" placeholder="Insertar el año"
-                        [min]="1900" [max]="2025" required />
-                </div>
-            </div>
+
             <div class="col-12 flex justify-end">
                 <p-button label="Guardar" type="submit" icon="pi pi-check" iconPos="right"
                     [disabled]="!autoForm.valid" />
@@ -47,7 +50,6 @@
         <div class="flex justify-between">
             <p-button type="button" icon="pi pi-filter-slash" label="Limpiar" (click)="clear(dt)"
                 class="p-button-outlined" /> <span class="p-input-icon-left ml-auto">
-                <i class="pi pi-search"></i>
                 <input pInputText type="text" (input)="onSearch($event)" placeholder="Buscar..." />
             </span>
         </div>
@@ -74,6 +76,7 @@
             <td>
                 <p-tag [value]="auto.estado ? 'Activo' : 'Inactivo'"
                     [severity]="auto.estado ? 'success' : 'danger'"></p-tag>
+                <button pButton icon="pi pi-undo" class="p-button-rounded ml-3" severity="secondary" (click)="switchStatusAuto(auto)"></button>
             </td>
             <td>
                 <div class="flex gap-2">
@@ -92,7 +95,7 @@
     </ng-template>
 </p-table>
 
-<p-dialog [(visible)]="autoDialog" [style]="{width: '450px'}" header="Detalles del Auto" [modal]="true" class="p-fluid">
+<p-dialog [(visible)]="autoDialog" [style]="{width: '450px', minHeight: '50vh'}" header="Detalles del Auto" [modal]="true" class="p-fluid">
     <ng-template pTemplate="content">
         <div class="p-field">
             <label for="editPatente">Patente</label>
@@ -102,12 +105,12 @@
         <div class="p-field">
             <label for="editMarca">Marca</label>
             <p-dropdown [options]="marcaOptions" [(ngModel)]="selectedMarca" optionLabel="label" name="editMarca"
-                placeholder="Seleccionar marca" (onChange)="loadModelosByMarca($event.value.id)" required></p-dropdown>
+                placeholder="Seleccionar marca" (onChange)="loadModelosByMarca($event.value.id)" required optionValue="value"></p-dropdown>
         </div>
         <div class="p-field">
             <label for="editModelo">Modelo</label>
             <p-dropdown [options]="modeloOptions" [(ngModel)]="editingAuto.modelo" optionLabel="label" name="editModelo"
-                placeholder="Seleccionar modelo" required></p-dropdown>
+                placeholder="Seleccionar modelo" required optionValue="value"></p-dropdown>
         </div>
         <div class="p-field">
             <label for="anio">Año</label>
