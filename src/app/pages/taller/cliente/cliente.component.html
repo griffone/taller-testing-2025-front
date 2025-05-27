@@ -1,1 +1,182 @@
-<p>cliente works!</p>
+<div class="p-mb-4">
+    <h2>Gestión de Clientes</h2>
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-panel header="Agregar Cliente">
+    <form (ngSubmit)="saveCliente()" #clienteForm="ngForm">
+        <div class="p-fluid flex flex-column gap-4 c-style">
+            <div class="flex gap-4">
+                <div class="p-field">
+                    <label for="dni" class="mr-3">DNI</label>
+                    <input class="w-64" id="dni" pInputText [(ngModel)]="cliente.dni" type="number" name="dni" 
+                        placeholder="Insertar el DNI" required />
+                </div>
+                <div class="p-field">
+                    <label for="nombre" class="mr-3">Nombre</label>
+                    <input class="w-64" id="nombre" pInputText [(ngModel)]="cliente.nombre" type="text" name="nombre" 
+                        placeholder="Insertar el nombre" required />
+                </div>
+                <div class="p-field">
+                    <label for="telefono" class="mr-3">Teléfono</label>
+                    <input class="w-64" id="telefono" pInputText [(ngModel)]="cliente.telefono" type="text" name="telefono" 
+                        placeholder="Insertar el teléfono" required />
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <div class="p-field">
+                    <label for="email" class="mr-3">Email</label>
+                    <input class="w-64" id="email" pInputText [(ngModel)]="cliente.email" type="email" name="email" 
+                        placeholder="Insertar el email" required />
+                </div>
+                <div class="p-field w-96">
+                    <label for="direccion" class="mr-3">Dirección</label>
+                    <input class="w-full" id="direccion" pInputText [(ngModel)]="cliente.direccion" type="text" name="direccion" 
+                        placeholder="Insertar la dirección" required />
+                </div>
+                <div class="p-field flex-grow">
+                    <label for="observaciones" class="mr-3">Observaciones</label>
+                    <input class="w-full" id="observaciones" pInputText [(ngModel)]="cliente.observaciones" type="text" name="observaciones" 
+                        placeholder="Insertar observaciones" />
+                </div>
+            </div>
+            <div>
+                <p-button label="Inactivos" icon="pi pi-history" iconPos="right" class="mr-3" (click)="onShowInactiveDialog()"></p-button>
+                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!clienteForm.valid" />
+            </div>
+        </div>
+    </form>
+</p-panel>
+
+<br />
+
+<p-table #dt [value]="clientes" 
+    [paginator]="true" 
+    [rows]="10" 
+    [loading]="loading"
+    [rowHover]="true"
+    [responsiveLayout]="'scroll'">
+    <ng-template pTemplate="caption">
+        <div class="flex justify-between items-center">
+            <span class="font-bold text-xl">Lista de Clientes</span>
+            <span class="p-input-icon-left">
+                <i class="pi pi-search"></i>
+                <input pInputText type="text" (input)="onSearch($event)" placeholder="Buscar..." />
+            </span>
+        </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th>ID</th>
+            <th>DNI</th>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Email</th>
+            <th>Dirección</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-cliente>
+        <tr>
+            <td>{{cliente.id}}</td>
+            <td>{{cliente.dni}}</td>
+            <td>{{cliente.nombre}}</td>
+            <td>{{cliente.telefono}}</td>
+            <td>{{cliente.email}}</td>
+            <td>{{cliente.direccion}}</td>
+            <td>
+                <p-tag [value]="cliente.estado ? 'Activo' : 'Inactivo'" 
+                    [severity]="cliente.estado ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning"
+                        (click)="editCliente(cliente)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                        (click)="deleteCliente(cliente.id)"></button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="8" class="text-center">No hay clientes disponibles</td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog header="Editar Cliente" [(visible)]="clienteDialog" [modal]="true" [style]="{ width: '50vw' }">
+    <form (ngSubmit)="saveEditedCliente()" #editClienteForm="ngForm">
+        <div class="p-fluid">
+            <div class="p-field mb-3">
+                <label for="editDni">DNI</label>
+                <input id="editDni" pInputText [(ngModel)]="editingCliente.dni" type="number" name="editDni" required />
+            </div>
+            <div class="p-field mb-3">
+                <label for="editNombre">Nombre</label>
+                <input id="editNombre" pInputText [(ngModel)]="editingCliente.nombre" name="editNombre" required />
+            </div>
+            <div class="p-field mb-3">
+                <label for="editTelefono">Teléfono</label>
+                <input id="editTelefono" pInputText [(ngModel)]="editingCliente.telefono" name="editTelefono" required />
+            </div>
+            <div class="p-field mb-3">
+                <label for="editEmail">Email</label>
+                <input id="editEmail" pInputText [(ngModel)]="editingCliente.email" name="editEmail" required />
+            </div>
+            <div class="p-field mb-3">
+                <label for="editDireccion">Dirección</label>
+                <input id="editDireccion" pInputText [(ngModel)]="editingCliente.direccion" name="editDireccion" required />
+            </div>
+            <div class="p-field mb-3">
+                <label for="editObservaciones">Observaciones</label>
+                <input id="editObservaciones" pInputText [(ngModel)]="editingCliente.observaciones" name="editObservaciones" />
+            </div>
+        </div>
+        <div class="flex justify-end gap-2 mt-4">
+            <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
+            <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="!editClienteForm.valid"></button>
+        </div>
+    </form>
+</p-dialog>
+
+<p-dialog header="Clientes Inactivos" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '50vw' }">
+    <p-table [value]="inactiveClientes" [responsiveLayout]="'scroll'">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Email</th>
+                <th>Dirección</th>
+                <th>Observaciones</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cliente>
+            <tr>
+                <td>{{ cliente.id }}</td>
+                <td>{{ cliente.dni }}</td>
+                <td>{{ cliente.nombre }}</td>
+                <td>{{ cliente.telefono }}</td>
+                <td>{{ cliente.email }}</td>
+                <td>{{ cliente.direccion }}</td>
+                <td>{{ cliente.observaciones }}</td>
+                <td>
+                    <button pButton icon="pi pi-refresh" label="Restaurar" 
+                        class="p-button p-button-secondary" 
+                        (click)="restoreCliente(cliente.id)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="8" class="text-center">No hay clientes inactivos</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>

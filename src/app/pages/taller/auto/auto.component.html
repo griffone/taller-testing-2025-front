@@ -16,15 +16,32 @@
                 <div class="col-12 md:col-6 lg:col-3">
                     <div class="p-field">
                         <label for="marca">Marca</label>
-                        <input id="marca" pInputText [(ngModel)]="auto.marca" type="text" name="marca"
-                            placeholder="Insertar la marca" required />
+                        <p-dropdown 
+                            id="marca"
+                            [options]="marcaOptions"
+                            [(ngModel)]="selectedMarca"
+                            optionLabel="label"
+                            optionValue="value"
+                            name="marca"
+                            placeholder="Seleccionar marca"
+                            (onChange)="loadModelosByMarca($event.value.id)"
+                            required>
+                        </p-dropdown>
                     </div>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3">
                     <div class="p-field">
                         <label for="modelo">Modelo</label>
-                        <input id="modelo" pInputText [(ngModel)]="auto.modelo" type="text" name="modelo"
-                            placeholder="Insertar el modelo" required />
+                        <p-dropdown 
+                            id="modelo"
+                            [options]="modeloOptions"
+                            [(ngModel)]="auto.modelo"
+                            optionLabel="label"
+                            optionValue="value"
+                            name="modelo"
+                            placeholder="Seleccionar modelo"
+                            required>
+                        </p-dropdown>
                     </div>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3">
@@ -32,6 +49,11 @@
                         <label for="anio">Año</label>
                         <p-inputNumber id="anio" [(ngModel)]="auto.anio" name="anio" placeholder="Insertar el año"
                             [min]="1900" [max]="2025" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="cliente">Cliente</label>
                     </div>
                 </div>
             </div>
