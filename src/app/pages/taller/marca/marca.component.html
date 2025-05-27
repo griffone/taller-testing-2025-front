@@ -2,25 +2,31 @@
     <h2>Gestión de Marcas</h2>
 </div>
 
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
 <p-panel header="Agregar Marca">
     <form (ngSubmit)="addMarca()" #marcaForm="ngForm">
         <div class="p-fluid flex justify-between">
-            <div class="p-field">
-                <label for="nombre" class="mr-3">Nombre</label>
+            <div class="p-field">                <label for="nombre" class="mr-3">Nombre</label>
                 <input class="w-64" id="nombre" pInputText [(ngModel)]="newMarca.nombre" type="text" name="nombre" placeholder="Insertar el nombre de la marca" required />
-                <label for="estado" class="ml-3 mr-3">Estado</label>
-                <p-dropdown [options]="estadoOptions" [(ngModel)]="newMarca.estado" optionLabel="label" optionValue="value" name="estado" placeholder="Seleccionar estado" required></p-dropdown>
             </div>
-            <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!marcaForm.valid" />
+            <div>
+                <p-button label="Inactivas" icon="pi pi-history" iconPos="right" class="mr-3" (click)="onShowInactiveDialog()"></p-button>
+                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!marcaForm.valid" />
+            </div>
         </div>
     </form>
 </p-panel>
-<p-table [value]="marcas" [paginator]="true" [rows]="10" [responsiveLayout]="'scroll'">
+<br />
+<p-table [value]="marcas" [paginator]="true" [rows]="pageSize" 
+         [totalRecords]="totalRecords" 
+         [responsiveLayout]="'scroll'"
+         (onPage)="paginate($event)">
     <ng-template pTemplate="header">
         <tr>
             <th>ID</th>
             <th>Nombre</th>
-            <th>Estado</th>
             <th>Acciones</th>
         </tr>
     </ng-template>
@@ -28,11 +34,55 @@
         <tr>
             <td>{{ marca.id }}</td>
             <td>{{ marca.nombre }}</td>
-            <td>{{ marca.estado }}</td>
             <td>
-                <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editMarca(marca)"></button>
-                <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="deleteMarca(marca.id)"></button>
+                <button pButton icon="pi pi-pencil" class="p-button p-button-warning mr-2" (click)="editMarca(marca)">Editar</button>
+                <button pButton icon="pi pi-trash" class="p-button p-button-danger" (click)="deleteMarca(marca.id)">Desactivar</button>
             </td>
         </tr>
     </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="4" class="text-center">No hay marcas disponibles</td>
+        </tr>
+    </ng-template>
 </p-table>
+<!-- Dialog to Show Unabled Brands -->
+<p-dialog header="Marcas Inactivas" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '50vw' }">
+    <p-table [value]="inactiveMarcas" [responsiveLayout]="'scroll'">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-marca>
+            <tr>
+                <td>{{ marca.id }}</td>
+                <td>{{ marca.nombre }}</td>
+                <td>
+                    <button pButton label="Restaurar" icon="pi pi-refresh" class="p-button p-button-secondary" (click)="restoreMarca(marca.id)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="3" class="text-center">No hay marcas inactivas</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+<!-- Edit Dialog -->
+<p-dialog header="Editar Marca" [(visible)]="showEditDialog" [modal]="true" [style]="{ width: '30vw' }">
+    <form (ngSubmit)="onEditMarcaSubmit()" #editMarcaForm="ngForm">
+        <div class="p-fluid">            <div class="p-field">
+                <label for="editNombre">Nombre</label>
+                <input id="editNombre" pInputText [(ngModel)]="selectedMarca.nombre" name="editNombre" required />
+            </div>
+        </div>
+        <div class="p-dialog-footer">
+            <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="showEditDialog = false"></button>
+            <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="!editMarcaForm.valid"></button>
+        </div>
+    </form>
+</p-dialog>

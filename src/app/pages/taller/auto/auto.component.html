@@ -1,1 +1,129 @@
-<p>auto works!</p>
+<div class="p-mb-4">
+    <h2>Gestión de Autos</h2>
+</div>
+
+<p-panel header="Agregar Auto">
+    <form (ngSubmit)="saveAuto()" #autoForm="ngForm">
+        <div class="p-fluid flex justify-between">
+            <div class="flex flex-wrap gap-4">
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="patente">Patente</label>
+                        <input id="patente" pInputText [(ngModel)]="auto.patente" type="text" name="patente"
+                            placeholder="Insertar la patente" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="marca">Marca</label>
+                        <input id="marca" pInputText [(ngModel)]="auto.marca" type="text" name="marca"
+                            placeholder="Insertar la marca" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="modelo">Modelo</label>
+                        <input id="modelo" pInputText [(ngModel)]="auto.modelo" type="text" name="modelo"
+                            placeholder="Insertar el modelo" required />
+                    </div>
+                </div>
+                <div class="col-12 md:col-6 lg:col-3">
+                    <div class="p-field">
+                        <label for="anio">Año</label>
+                        <p-inputNumber id="anio" [(ngModel)]="auto.anio" name="anio" placeholder="Insertar el año"
+                            [min]="1900" [max]="2025" required />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 flex justify-end">
+                <p-button label="Guardar" type="submit" icon="pi pi-check" iconPos="right"
+                    [disabled]="!autoForm.valid" />
+            </div>
+        </div>
+    </form>
+</p-panel>
+
+<p-table [value]="autos" [paginator]="true" [rows]="10" [responsive]="true"
+    [globalFilterFields]="['patente','modelo.marca.nombre','modelo.nombre']" #dt>
+    <ng-template pTemplate="caption">
+        <div class="flex justify-between">
+            <p-button type="button" icon="pi pi-filter-slash" label="Limpiar" (click)="clear(dt)"
+                class="p-button-outlined" /> <span class="p-input-icon-left ml-auto">
+                <input pInputText type="text" (input)="onSearch($event)" placeholder="Buscar..." />
+            </span>
+        </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="patente">Patente <p-sortIcon field="patente"></p-sortIcon></th>
+            <th pSortableColumn="modelo.marca.nombre">Marca <p-sortIcon field="modelo.marca.nombre"></p-sortIcon></th>
+            <th pSortableColumn="modelo.nombre">Modelo <p-sortIcon field="modelo.nombre"></p-sortIcon></th>
+            <th pSortableColumn="anio">Año <p-sortIcon field="anio"></p-sortIcon></th>
+            <th pSortableColumn="cliente.nombre">Nombre del Cliente <p-sortIcon field="cliente.nombre"></p-sortIcon>
+            </th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-auto>
+        <tr>
+            <td>{{auto.patente}}</td>
+            <td>{{auto.modelo.marca.nombre}}</td>
+            <td>{{auto.modelo.nombre}}</td>
+            <td>{{auto.anio}}</td>
+            <td>{{auto.cliente.nombre}}</td>
+            <td>
+                <p-tag [value]="auto.estado ? 'Activo' : 'Inactivo'"
+                    [severity]="auto.estado ? 'success' : 'danger'"></p-tag>
+                <button pButton icon="pi pi-undo" class="p-button-rounded ml-3" severity="secondary" (click)="switchStatusAuto(auto)"></button>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning"
+                        (click)="editAuto(auto)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                        (click)="deleteAuto(auto.id)"></button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="8">No se encontraron autos.</td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="autoDialog" [style]="{width: '450px', minHeight: '50vh'}" header="Detalles del Auto" [modal]="true" class="p-fluid">
+    <ng-template pTemplate="content">
+        <div class="p-field">
+            <label for="editPatente">Patente</label>
+            <input type="text" pInputText id="patente" name="editPatente" [(ngModel)]="editingAuto.patente" required
+                autofocus />
+        </div>
+        <div class="p-field">
+            <label for="editMarca">Marca</label>
+            <p-dropdown [options]="marcaOptions" [(ngModel)]="selectedMarca" optionLabel="label" name="editMarca"
+                placeholder="Seleccionar marca" (onChange)="loadModelosByMarca($event.value.id)" required optionValue="value"></p-dropdown>
+        </div>
+        <div class="p-field">
+            <label for="editModelo">Modelo</label>
+            <p-dropdown [options]="modeloOptions" [(ngModel)]="editingAuto.modelo" optionLabel="label" name="editModelo"
+                placeholder="Seleccionar modelo" required optionValue="value"></p-dropdown>
+        </div>
+        <div class="p-field">
+            <label for="anio">Año</label>
+            <p-inputNumber id="anio" [(ngModel)]="editingAuto.anio" [min]="1900" [max]="2025" required />
+        </div>
+    </ng-template>
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text"
+            (click)="hideDialog()"></button>
+        <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text"
+            (click)="saveEditedAuto()"></button>
+    </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
