@@ -18,6 +18,7 @@ import { ConfirmationService } from 'primeng/api';
 import { AutoService, Auto } from '../../service/auto.service';
 import { MarcaService } from '../../service/marca.service';
 import { ModeloService } from '../../service/modelo.service';
+import { ClienteService } from '../../service/cliente.service';
 
 @Component({
   selector: 'app-auto',
@@ -48,18 +49,40 @@ export class AutoComponent implements OnInit {
   loading: boolean = true;
   marcaOptions: any[] = [];
   modeloOptions: any[] = [];
+  clienteOptions: any[] = [];
   selectedMarca: any = null;
 
   constructor(
     private autoService: AutoService,
     private marcaService: MarcaService,
     private modeloService: ModeloService,
+    private clienteService: ClienteService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
   ngOnInit() {
     this.loadAutos();
     this.loadMarcas();
+    this.loadClientes();
+  }
+
+  loadClientes() {
+    this.clienteService.mostrarHabilitados().subscribe({
+      next: (clientes) => {
+        this.clienteOptions = clientes.map(cliente => ({
+          label: cliente.nombre,
+          value: cliente
+        }));
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Error al cargar los clientes'
+        });
+        console.error('Error cargando clientes:', error);
+      }
+    });
   }
 
   loadMarcas() {
@@ -142,22 +165,37 @@ export class AutoComponent implements OnInit {
   }
 
   saveAuto() {
-    this.autoService.guardar(this.auto as Auto).subscribe({
+    if (!this.auto.cliente) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Debe seleccionar un cliente'
+      });
+      return;
+    }
+
+    // Aseguramos que el auto tenga el estado en true antes de guardar
+    const autoToSave = {
+      ...this.auto,
+      estado: true
+    } as Auto;
+
+    this.autoService.guardar(autoToSave).subscribe({
       next: (response) => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Éxito',
-          detail: 'Auto guardado correctamente'
-        });
-        this.loadAutos();
-        this.auto = {};
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Éxito',
+        detail: 'Auto guardado correctamente'
+      });
+      this.loadAutos();
+      this.auto = {};
       },
       error: (error) => {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Error',
-          detail: 'Error al guardar el auto'
-        });
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Error',
+        detail: 'Error al guardar el auto'
+      });
       }
     });
   }  editAuto(auto: Auto) {
@@ -209,12 +247,21 @@ export class AutoComponent implements OnInit {
     this.autoDialog = true;
   }  saveEditedAuto() {
     if (this.editingAuto.id) {
-      // Validamos que tengamos un modelo seleccionado
+      // Validamos que tengamos un modelo y cliente seleccionados
       if (!this.editingAuto.modelo) {
         this.messageService.add({
           severity: 'error',
           summary: 'Error',
           detail: 'Debe seleccionar un modelo de auto'
+        });
+        return;
+      }
+      
+      if (!this.editingAuto.cliente) {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Debe seleccionar un cliente'
         });
         return;
       }
@@ -314,6 +361,7 @@ export class AutoComponent implements OnInit {
     this.editingAuto = {} as Auto;
     this.selectedMarca = null;
     this.modeloOptions = [];
+    this.auto = {};
   }
 
   clear(table: Table) {
