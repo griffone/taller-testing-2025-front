@@ -1,1 +1,101 @@
-<p>servicio works!</p>
+<div class="p-mb-4">
+    <h2 class="text-white">Gestión de Servicios</h2>
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<p-panel header="Agregar Servicio">
+    <form (ngSubmit)="saveServicio()" #servicioForm="ngForm">
+        <div class="p-fluid flex flex-column gap-4 c-style">
+            <div class="flex gap-4">
+                <div class="p-field">
+                    <label for="nombre" class="mr-3">Nombre</label>
+                    <input class="w-64" id="nombre" pInputText [(ngModel)]="servicio.nombre" type="text" name="nombre" placeholder="Insertar el nombre del servicio" required />
+                </div>
+                <div class="p-field">
+                    <label for="precio" class="mr-3">Precio</label>
+                    <p-inputNumber class="w-48" id="precio" [(ngModel)]="servicio.precio" name="precio" placeholder="Insertar el precio" mode="currency" currency="ARS" required></p-inputNumber>
+                </div>
+            </div>
+            <div class="flex gap-4">
+                <div class="p-field">
+                    <label for="minutos" class="mr-3">Minutos estimados</label>
+                    <p-inputNumber class="w-48" id="minutos" [(ngModel)]="servicio.minutosestimados" name="minutosestimados" placeholder="Tiempo estimado" required></p-inputNumber>
+                </div>
+            </div>
+
+            <div class="p-field flex justify-end">
+                <button pButton type="submit" label="Guardar" icon="pi pi-save" [disabled]="!servicioForm.valid"></button>
+                <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-secondary ml-2" (click)="resetForm()"></button>
+            </div>
+        </div>
+    </form>
+</p-panel>
+
+<div class="card bg-gray-900 mt-4">
+    <h5 class="text-white">Lista de Servicios</h5>
+    <div class="flex justify-between mb-2">
+        <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" (input)="applyFilterGlobal($event, 'contains')" placeholder="Buscar..." />
+        </span>
+    </div>
+    <p-table #dt [value]="servicios" [rows]="10" [paginator]="true" [globalFilterFields]="['nombre', 'minutosestimados']" [loading]="loading" [rowHover]="true" dataKey="id" styleClass="p-datatable-gridlines">
+        <ng-template pTemplate="header">
+            <tr>
+                <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+                <th pSortableColumn="nombre">Nombre <p-sortIcon field="nombre"></p-sortIcon></th>
+                <th pSortableColumn="precio">Precio <p-sortIcon field="precio"></p-sortIcon></th>
+                <th pSortableColumn="minutosestimados">Minutos <p-sortIcon field="minutosestimados"></p-sortIcon></th>
+                <th pSortableColumn="estado">Estado <p-sortIcon field="estado"></p-sortIcon></th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-servicio>
+            <tr>
+                <td>{{ servicio.id }}</td>
+                <td>{{ servicio.nombre }}</td>
+                <td>{{ servicio.precio }}</td>
+                <td>{{ servicio.minutosestimados }} min</td>
+                <td>
+                    <p-tag [value]="servicio.estado ? 'Activo' : 'Inactivo'" [severity]="getSeverity(servicio.estado)"></p-tag>
+                    <button pButton icon="pi pi-undo" class="p-button-rounded ml-3" severity="secondary" (click)="switchStatusService(servicio)"></button>
+                </td>
+                <td>
+                    <button pButton pRipple icon="pi pi-pencil" class="p-button-rounded p-button-success mr-2" (click)="editServicio(servicio)"></button>
+                    <button pButton pRipple icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="confirmDeleteServicio(servicio)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="7">No se encontraron servicios.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</div>
+
+<!-- Dialog para editar servicio -->
+<p-dialog [(visible)]="servicioDialog" [style]="{ width: '450px' }" header="Editar Servicio" [modal]="true" styleClass="p-fluid">
+    <ng-template pTemplate="content">
+        <form #editServicioForm="ngForm">
+            <div class="p-field mt-2">
+                <label for="edit-nombre">Nombre</label>
+                <input id="edit-nombre" pInputText [(ngModel)]="editingServicio.nombre" name="edit-nombre" required />
+            </div>
+            <div class="p-field mt-2">
+                <label for="edit-precio">Precio</label>
+                <p-inputNumber id="edit-precio" [(ngModel)]="editingServicio.precio" name="edit-precio" mode="currency" currency="ARS" required></p-inputNumber>
+            </div>
+            <div class="p-field mt-2">
+                <label for="edit-minutos">Minutos estimados</label>
+                <p-inputNumber id="edit-minutos" [(ngModel)]="editingServicio.minutosestimados" name="edit-minutos" required></p-inputNumber>
+            </div>
+        </form>
+    </ng-template>
+    <ng-template pTemplate="footer">
+        <button pButton pRipple label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="servicioDialog = false"></button>
+        <button pButton pRipple label="Guardar" icon="pi pi-check" class="p-button-text" (click)="updateServicio()" [disabled]="!editServicioForm?.valid"></button>
+    </ng-template>
+</p-dialog>
