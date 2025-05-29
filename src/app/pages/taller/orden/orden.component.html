@@ -16,16 +16,17 @@
         <div class="flex justify-between items-center">
             <span class="font-bold text-xl">Lista de Órdenes de Trabajo</span>
             <div class="flex gap-2">
-                <div class="flex flex-column gap-1">
+                <div class="flex flex-column gap-3 items-center">
                     <label for="nombreBusqueda">Cliente/Técnico</label>
                     <input pInputText id="nombreBusqueda" [(ngModel)]="nombreBusqueda" placeholder="Buscar..." />
-                </div>                    <div class="flex flex-column gap-1">
-                    <label for="fechaInferior">Desde</label>
-                    <p-datepicker id="fechaInferior" [(ngModel)]="fechaInferior" [showIcon]="true" dateFormat="yy-mm-dd"></p-datepicker>
                 </div>
-                <div class="flex flex-column gap-1">
+                <div class="flex flex-column gap-3  items-center">
+                    <label for="fechaInferior">Desde</label>
+                    <p-datepicker id="fechaInferior" [(ngModel)]="fechaInferior" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-datepicker>
+                </div>
+                <div class="flex flex-column gap-3 items-center">
                     <label for="fechaSuperior">Hasta</label>
-                    <p-datepicker id="fechaSuperior" [(ngModel)]="fechaSuperior" [showIcon]="true" dateFormat="yy-mm-dd"></p-datepicker>
+                    <p-datepicker id="fechaSuperior" [(ngModel)]="fechaSuperior" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-datepicker>
                 </div>
                 <div class="flex flex-column gap-1 justify-end">
                     <div>
@@ -106,13 +107,13 @@
                     <div class="flex-1 first-row-mb">
                         <div class="p-field">
                             <label for="fecha_inicio">Fecha de inicio</label>
-                            <p-datepicker id="fecha_inicio" [(ngModel)]="orden.fecha_inicio" name="fecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" required> </p-datepicker>
+                            <p-datepicker id="fecha_inicio" [(ngModel)]="orden.fecha_inicio" name="fecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
                         </div>
                     </div>
                     <div class="flex-1">
                         <div class="p-field">
                             <label for="fecha_fin_estimada">Fecha fin estimada</label>
-                            <p-datepicker id="fecha_fin_estimada" [(ngModel)]="orden.fecha_fin_estimada" name="fecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" required> </p-datepicker>
+                            <p-datepicker id="fecha_fin_estimada" [(ngModel)]="orden.fecha_fin_estimada" name="fecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
                         </div>
                     </div>
                 </div>
@@ -178,7 +179,7 @@
 </p-dialog>
 
 <!-- Diálogo para mostrar órdenes inactivas -->
-<p-dialog header="Órdenes Inactivas" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '80vw' }">
+<p-dialog header="Órdenes Inactivas" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '50vw' }">
     <p-table [value]="ordenesInactivas" [responsiveLayout]="'scroll'">
         <ng-template pTemplate="header">
             <tr>
@@ -245,19 +246,19 @@
                 <div class="flex-1">
                     <div class="p-field">
                         <label for="editFecha_inicio">Fecha de inicio</label>
-                        <p-datepicker id="editFecha_inicio" [(ngModel)]="editingOrden.fecha_inicio" name="editFecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" required> </p-datepicker>
+                        <p-datepicker id="editFecha_inicio" [(ngModel)]="editingOrden.fecha_inicio" name="editFecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
                     </div>
                 </div>
                 <div class="flex-1">
                     <div class="p-field">
                         <label for="editFecha_fin_estimada">Fecha fin estimada</label>
-                        <p-datepicker id="editFecha_fin_estimada" [(ngModel)]="editingOrden.fecha_fin_estimada" name="editFecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" required> </p-datepicker>
+                        <p-datepicker id="editFecha_fin_estimada" [(ngModel)]="editingOrden.fecha_fin_estimada" name="editFecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
                     </div>
                 </div>
                 <div class="flex-1">
                     <div class="p-field">
                         <label for="editFecha_fin_real">Fecha fin real</label>
-                        <p-datepicker id="editFecha_fin_real" [(ngModel)]="editingOrden.fecha_fin_real" name="editFecha_fin_real" [showIcon]="true" dateFormat="yy-mm-dd"> </p-datepicker>
+                        <p-datepicker id="editFecha_fin_real" [(ngModel)]="editingOrden.fecha_fin_real" name="editFecha_fin_real" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"> </p-datepicker>
                     </div>
                 </div>
             </div>
@@ -307,7 +308,7 @@
 
 <!-- Diálogo para añadir/editar detalles -->
 <p-dialog header="Detalle de Servicio" [(visible)]="detalleDialog" [style]="{ width: '500px' }" [modal]="true">
-    <div class="p-fluid">
+    <div class="p-fluid custom-modal">
         <div class="p-field mb-3">
             <label for="servicio">Servicio</label>
             <p-dropdown id="servicio" [options]="servicioOptions" [(ngModel)]="detalleActual.servicio" optionLabel="label" optionValue="value" placeholder="Seleccionar servicio" required> </p-dropdown>

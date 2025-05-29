@@ -67,5 +67,29 @@
     }
     .date-field {
         display: flex;
+        gap: 10px;
+    }
+}
+
+:host ::ng-deep {
+    .p-datepicker-trigger {
+        height: auto;
+    }
+    
+    .p-calendar, .p-datepicker, p-datepicker {
+        width: 100% !important;
+        
+        .p-inputtext {
+            width: 100% !important;
+        }
+        
+        .p-datepicker-calendar-container {
+            min-width: 280px;
+        }
+    }
+    
+    .p-inputgroup {
+        width: 100%;
+        display: flex;
     }
 }
