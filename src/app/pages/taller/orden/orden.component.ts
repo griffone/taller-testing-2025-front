@@ -406,34 +406,16 @@ export class OrdenComponent implements OnInit {
     
     this.ordenService.save(ordenToSave).subscribe({
       next: () => {
-        // Obtener el último ID y configurar los detalles
-        this.ordenService.getLastId().subscribe({
-          next: (result) => {
-            const id = result.id;
-            
-            // Configurar cada detalle con el ID de la orden
-            if (this.orden.detalle) {
-              this.orden.detalle.forEach(detalle => {
-                this.ordenService.setOrdenId(id, detalle.id || 0).subscribe();
-              });
-            }
-            
-            this.messageService.add({
-              severity: 'success',
-              summary: 'Éxito',
-              detail: 'Orden guardada correctamente'
-            });
-            
-            this.loading = false;
-            this.loadOrdenes();
-            this.resetOrden();
-            this.crearOrdenDialog = false;
-          },
-          error: (error) => {
-            console.error('Error obteniendo el último ID', error);
-            this.loading = false;
-          }
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Éxito',
+          detail: 'Orden guardada correctamente'
         });
+        
+        this.loading = false;
+        this.loadOrdenes();
+        this.resetOrden();
+        this.crearOrdenDialog = false;
       },
       error: (error) => {
         this.messageService.add({
