@@ -1,0 +1,95 @@
+.detail-panel {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.readonly-input {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.details-table {
+    margin-top: 1rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.p-dialog-content {
+    padding-top: 1rem !important;
+}
+
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.detail-container {
+    margin-top: 1rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    .filter-container {
+        flex-direction: column;
+    }
+    
+    .filter-item {
+        width: 100%;
+    }
+}
+
+.custom-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    .p-field {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .custom-modal-row-header {
+        display: flex;
+        justify-content: space-between;
+    }
+    label {
+        margin-right: 10px;
+    }
+    .first-row-mb {
+        margin-bottom: 10px;
+    }
+    .date-field {
+        display: flex;
+        gap: 10px;
+    }
+}
+
+:host ::ng-deep {
+    .p-datepicker-trigger {
+        height: auto;
+    }
+    
+    .p-calendar, .p-datepicker, p-datepicker {
+        width: 100% !important;
+        
+        .p-inputtext {
+            width: 100% !important;
+        }
+        
+        .p-datepicker-calendar-container {
+            min-width: 280px;
+        }
+    }
+    
+    .p-inputgroup {
+        width: 100%;
+        display: flex;
+    }
+}

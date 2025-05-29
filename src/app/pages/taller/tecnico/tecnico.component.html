@@ -1,1 +1,129 @@
-<p>tecnico works!</p>
+<div class="p-mb-4">
+    <h2>Gestión de Técnicos</h2>
+</div>
+
+<p-toast></p-toast>
+
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<p-panel header="Gestión de Técnicos">
+    <form #tecnicoForm="ngForm" (ngSubmit)="saveTecnico()">
+        <div class="flex justify-between">
+            <div class="flex flex-wrap gap-4">
+                <div class="col-12 lg:col-6 p-fluid">
+                    <label for="dni" class="mr-2">DNI</label>
+                    <p-inputNumber id="dni" [(ngModel)]="tecnico.dni" name="dni" required placeholder="Ingrese el DNI" [showButtons]="false"></p-inputNumber>
+                </div>
+    
+                <div class="col-12 lg:col-6 p-fluid">
+                    <label for="nombre" class="mr-2">Nombre</label>
+                    <input pInputText id="nombre" [(ngModel)]="tecnico.nombre" name="nombre" required placeholder="Ingrese el nombre" />
+                </div>
+            </div>
+
+            <div class="col-12 flex justify-end">
+                <p-button label="Inactivos" icon="pi pi-history" iconPos="right" class="mr-3"
+                    (click)="onShowInactiveDialog()"></p-button>
+                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right"
+                    [disabled]="!tecnicoForm.valid" />
+            </div>
+        </div>
+    </form>
+</p-panel>
+
+<br />
+
+<p-table #dt [value]="tecnicos" [paginator]="true" [rows]="pageSize" [loading]="loading" 
+    [totalRecords]="totalRecords" [rowHover]="true" [responsiveLayout]="'scroll'"
+    (onPage)="paginate($event)" [globalFilterFields]="['dni','nombre']">
+    <ng-template pTemplate="caption">
+        <div class="flex justify-between items-center">
+            <span class="font-bold text-xl">Lista de Técnicos</span>
+            <div>
+                <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" (input)="onSearch($event)" placeholder="Buscar..." />
+                </span>
+                <button pButton icon="pi pi-filter-slash" class="p-button-outlined ml-2" 
+                    (click)="clear(dt)"></button>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th>DNI</th>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-tecnico>
+        <tr>
+            <td>{{tecnico.dni}}</td>
+            <td>{{tecnico.nombre}}</td>
+            <td>
+                <p-tag [value]="tecnico.estado ? 'Activo' : 'Inactivo'"
+                    [severity]="tecnico.estado ? 'success' : 'danger'"></p-tag>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning"
+                        (click)="editTecnico(tecnico)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger"
+                        (click)="deleteTecnico(tecnico.id!)"></button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="4" class="text-center">No se encontraron técnicos.</td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<p-dialog [(visible)]="showInactiveDialog" [style]="{width: '70vw'}" [modal]="true" header="Técnicos Inactivos">
+    <p-table [value]="inactiveTecnicos" [responsive]="true">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>DNI</th>
+                <th>Nombre</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-tecnico>
+            <tr>
+                <td>{{tecnico.dni}}</td>
+                <td>{{tecnico.nombre}}</td>
+                <td>
+                    <button pButton icon="pi pi-refresh" class="p-button-rounded p-button-success"
+                        (click)="restoreTecnico(tecnico.id!)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="3" class="text-center">No hay técnicos inactivos.</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+
+<p-dialog [(visible)]="tecnicoDialog" [style]="{width: '450px'}" header="Editar Técnico" [modal]="true"
+    class="p-fluid">
+    <form #editTecnicoForm="ngForm" (ngSubmit)="saveEditedTecnico()">
+        <div class="field">
+            <label for="editDni">DNI</label>
+            <p-inputNumber id="editDni" [(ngModel)]="editingTecnico.dni" name="dni" required placeholder="Ingrese el DNI" [showButtons]="false">
+            </p-inputNumber>
+        </div>
+        <div class="field">
+            <label for="editNombre">Nombre</label>
+            <input pInputText id="editNombre" [(ngModel)]="editingTecnico.nombre" name="nombre" required placeholder="Ingrese el nombre" />
+        </div>
+        <div class="flex justify-end">
+            <p-button label="Cancelar" icon="pi pi-times" (click)="hideDialog()" class="p-button-text mr-2"></p-button>
+            <p-button label="Guardar" icon="pi pi-check" type="submit" [disabled]="!editTecnicoForm.valid"></p-button>
+        </div>
+    </form>
+</p-dialog>

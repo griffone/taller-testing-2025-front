@@ -54,6 +54,16 @@
                 <div class="col-12 md:col-6 lg:col-3">
                     <div class="p-field">
                         <label for="cliente">Cliente</label>
+                        <p-dropdown 
+                            id="cliente"
+                            [options]="clienteOptions"
+                            [(ngModel)]="auto.cliente"
+                            optionLabel="label"
+                            optionValue="value"
+                            name="cliente"
+                            placeholder="Seleccionar cliente"
+                            required>
+                        </p-dropdown>
                     </div>
                 </div>
             </div>
@@ -137,6 +147,19 @@
         <div class="p-field">
             <label for="anio">Año</label>
             <p-inputNumber id="anio" [(ngModel)]="editingAuto.anio" [min]="1900" [max]="2025" required />
+        </div>
+        <div class="p-field">
+            <label for="editCliente">Cliente</label>
+            <p-dropdown 
+                id="editCliente"
+                [options]="clienteOptions"
+                [(ngModel)]="editingAuto.cliente"
+                optionLabel="label"
+                name="editCliente"
+                placeholder="Seleccionar cliente"
+                required
+                optionValue="value">
+            </p-dropdown>
         </div>
     </ng-template>
     <ng-template pTemplate="footer">

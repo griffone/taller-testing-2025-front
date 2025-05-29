@@ -15,7 +15,8 @@ import { LayoutService } from '../service/layout.service';
             <button class="layout-menu-button layout-topbar-action" (click)="layoutService.onMenuToggle()">
                 <i class="pi pi-bars"></i>
             </button>
-            <a class="layout-topbar-logo" routerLink="/">
+            <!-- <i class="pi pi-car"></i> -->
+            <a class="layout-topbar-logo" routerLink="/" style="white-space: nowrap;">
                 <span>Taller de Autos - Testing</span>
             </a>
         </div>

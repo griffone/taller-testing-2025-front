@@ -11,40 +11,49 @@
             <div class="flex gap-4">
                 <div class="p-field">
                     <label for="dni" class="mr-3">DNI</label>
-                    <input class="w-64" id="dni" pInputText [(ngModel)]="cliente.dni" type="number" name="dni" 
+                    <input class="w-64" id="dni" pInputText [(ngModel)]="cliente.dni" type="number" name="dni" min="0"
                         placeholder="Insertar el DNI" required />
                 </div>
                 <div class="p-field">
                     <label for="nombre" class="mr-3">Nombre</label>
-                    <input class="w-64" id="nombre" pInputText [(ngModel)]="cliente.nombre" type="text" name="nombre" 
+                    <input class="w-64" id="nombre" pInputText [(ngModel)]="cliente.nombre" type="text" name="nombre"
                         placeholder="Insertar el nombre" required />
                 </div>
                 <div class="p-field">
                     <label for="telefono" class="mr-3">Teléfono</label>
-                    <input class="w-64" id="telefono" pInputText [(ngModel)]="cliente.telefono" type="text" name="telefono" 
-                        placeholder="Insertar el teléfono" required />
+                    <input class="w-64" id="telefono" pInputText [(ngModel)]="cliente.telefono" type="number"
+                        name="telefono" placeholder="Insertar el teléfono" required />
                 </div>
             </div>
             <div class="flex gap-4">
+
                 <div class="p-field">
                     <label for="email" class="mr-3">Email</label>
-                    <input class="w-64" id="email" pInputText [(ngModel)]="cliente.email" type="email" name="email" 
-                        placeholder="Insertar el email" required />
+                    <input class="w-64" id="email" pInputText [(ngModel)]="cliente.email" #emailInput="ngModel"
+                        type="email" name="email" placeholder="Insertar el email" required
+                        pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" />
+                    <small class="p-error block mt-1"
+                        *ngIf="emailInput.invalid && (emailInput.dirty || emailInput.touched)">
+                        <span *ngIf="emailInput.errors?.['required']">Email es requerido.</span>
+                        <span *ngIf="emailInput.errors?.['pattern']">Formato de email inválido.</span>
+                    </small>
                 </div>
                 <div class="p-field w-96">
                     <label for="direccion" class="mr-3">Dirección</label>
-                    <input class="w-full" id="direccion" pInputText [(ngModel)]="cliente.direccion" type="text" name="direccion" 
-                        placeholder="Insertar la dirección" required />
+                    <input class="w-full" id="direccion" pInputText [(ngModel)]="cliente.direccion" type="text"
+                        name="direccion" placeholder="Insertar la dirección" required />
                 </div>
                 <div class="p-field flex-grow">
                     <label for="observaciones" class="mr-3">Observaciones</label>
-                    <input class="w-full" id="observaciones" pInputText [(ngModel)]="cliente.observaciones" type="text" name="observaciones" 
-                        placeholder="Insertar observaciones" />
+                    <input class="w-full" id="observaciones" pInputText [(ngModel)]="cliente.observaciones" type="text"
+                        name="observaciones" placeholder="Insertar observaciones" />
                 </div>
             </div>
             <div>
-                <p-button label="Inactivos" icon="pi pi-history" iconPos="right" class="mr-3" (click)="onShowInactiveDialog()"></p-button>
-                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!clienteForm.valid" />
+                <p-button label="Inactivos" icon="pi pi-history" iconPos="right" class="mr-3"
+                    (click)="onShowInactiveDialog()"></p-button>
+                <p-button label="Agregar" type="submit" icon="pi pi-check" iconPos="right"
+                    [disabled]="!clienteForm.valid" />
             </div>
         </div>
     </form>
@@ -52,11 +61,7 @@
 
 <br />
 
-<p-table #dt [value]="clientes" 
-    [paginator]="true" 
-    [rows]="10" 
-    [loading]="loading"
-    [rowHover]="true"
+<p-table #dt [value]="clientes" [paginator]="true" [rows]="10" [loading]="loading" [rowHover]="true"
     [responsiveLayout]="'scroll'">
     <ng-template pTemplate="caption">
         <div class="flex justify-between items-center">
@@ -88,7 +93,7 @@
             <td>{{cliente.email}}</td>
             <td>{{cliente.direccion}}</td>
             <td>
-                <p-tag [value]="cliente.estado ? 'Activo' : 'Inactivo'" 
+                <p-tag [value]="cliente.estado ? 'Activo' : 'Inactivo'"
                     [severity]="cliente.estado ? 'success' : 'danger'"></p-tag>
             </td>
             <td>
@@ -121,24 +126,35 @@
             </div>
             <div class="p-field mb-3">
                 <label for="editTelefono">Teléfono</label>
-                <input id="editTelefono" pInputText [(ngModel)]="editingCliente.telefono" name="editTelefono" required />
+                <input id="editTelefono" pInputText [(ngModel)]="editingCliente.telefono" name="editTelefono"
+                    required />
             </div>
             <div class="p-field mb-3">
                 <label for="editEmail">Email</label>
-                <input id="editEmail" pInputText [(ngModel)]="editingCliente.email" name="editEmail" required />
+                <input id="editEmail" pInputText [(ngModel)]="editingCliente.email" name="editEmail" required
+                    #editEmailInput="ngModel" pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" />
+                <small class="p-error block mt-1"
+                    *ngIf="editEmailInput.invalid && (editEmailInput.dirty || editEmailInput.touched)">
+                    <span *ngIf="editEmailInput.errors?.['required']">Email es requerido.</span>
+                    <span *ngIf="editEmailInput.errors?.['pattern']">Formato de email inválido.</span>
+                </small>
             </div>
             <div class="p-field mb-3">
                 <label for="editDireccion">Dirección</label>
-                <input id="editDireccion" pInputText [(ngModel)]="editingCliente.direccion" name="editDireccion" required />
+                <input id="editDireccion" pInputText [(ngModel)]="editingCliente.direccion" name="editDireccion"
+                    required />
             </div>
             <div class="p-field mb-3">
                 <label for="editObservaciones">Observaciones</label>
-                <input id="editObservaciones" pInputText [(ngModel)]="editingCliente.observaciones" name="editObservaciones" />
+                <input id="editObservaciones" pInputText [(ngModel)]="editingCliente.observaciones"
+                    name="editObservaciones" />
             </div>
         </div>
         <div class="flex justify-end gap-2 mt-4">
-            <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-            <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="!editClienteForm.valid"></button>
+            <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text"
+                (click)="hideDialog()"></button>
+            <button pButton type="submit" label="Guardar" icon="pi pi-check"
+                [disabled]="!editClienteForm.valid"></button>
         </div>
     </form>
 </p-dialog>
@@ -167,8 +183,7 @@
                 <td>{{ cliente.direccion }}</td>
                 <td>{{ cliente.observaciones }}</td>
                 <td>
-                    <button pButton icon="pi pi-refresh" label="Restaurar" 
-                        class="p-button p-button-secondary" 
+                    <button pButton icon="pi pi-refresh" label="Restaurar" class="p-button p-button-secondary"
                         (click)="restoreCliente(cliente.id)"></button>
                 </td>
             </tr>

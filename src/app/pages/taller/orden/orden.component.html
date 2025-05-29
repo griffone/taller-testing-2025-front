@@ -1,1 +1,353 @@
-<p>orden works!</p>
+<div class="p-mb-4">
+    <h2>Gestión de Órdenes de Trabajo</h2>
+</div>
+
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="flex justify-between align-items-center mb-4">
+    <p-button label="Crear Orden de Trabajo" icon="pi pi-plus" (click)="openNewOrden()" styleClass="p-button-success"></p-button>
+    <p-button label="Órdenes inactivas" icon="pi pi-history" iconPos="right" (click)="onShowInactiveDialog()" styleClass="p-button-secondary"></p-button>
+</div>
+
+<!-- Tabla con lista de órdenes -->
+<p-table #dt [value]="ordenes" 
+    [paginator]="true" 
+    [rows]="pageSize" 
+    [loading]="loading" 
+    [rowHover]="true" 
+    [responsiveLayout]="'scroll'" 
+    [totalRecords]="totalRecords" 
+    [lazy]="true" 
+    [showCurrentPageReport]="true" 
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} órdenes" 
+    [rowsPerPageOptions]="[5, 10, 20]" 
+    (onPage)="paginate($event)" 
+    styleClass="p-datatable-gridlines">
+    <ng-template pTemplate="caption">
+        <div class="flex justify-between items-center">
+            <span class="font-bold text-xl">Lista de Órdenes de Trabajo</span>
+            <div class="flex gap-2">
+                <div class="flex flex-column gap-3 items-center">
+                    <label for="nombreBusqueda">Cliente/Técnico</label>
+                    <input pInputText id="nombreBusqueda" [(ngModel)]="nombreBusqueda" placeholder="Buscar..." />
+                </div>
+                <div class="flex flex-column gap-3  items-center">
+                    <label for="fechaInferior">Desde</label>
+                    <p-datepicker id="fechaInferior" [(ngModel)]="fechaInferior" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-datepicker>
+                </div>
+                <div class="flex flex-column gap-3 items-center">
+                    <label for="fechaSuperior">Hasta</label>
+                    <p-datepicker id="fechaSuperior" [(ngModel)]="fechaSuperior" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"></p-datepicker>
+                </div>
+                <div class="flex flex-column gap-1 justify-end">
+                    <div>
+                        <button pButton icon="pi pi-search" class="p-button-outlined mr-2" (click)="buscarOrdenes()"></button>
+                        <button pButton icon="pi pi-filter-slash" class="p-button-outlined" (click)="clear(dt)"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+    <ng-template pTemplate="header">
+        <tr>
+            <th pSortableColumn="id">ID <p-sortIcon field="id"></p-sortIcon></th>
+            <th pSortableColumn="cliente.nombre">Cliente <p-sortIcon field="cliente.nombre"></p-sortIcon></th>
+            <th pSortableColumn="auto.patente">Auto <p-sortIcon field="auto.patente"></p-sortIcon></th>
+            <th pSortableColumn="tecnico.nombre">Técnico <p-sortIcon field="tecnico.nombre"></p-sortIcon></th>
+            <th pSortableColumn="fecha_inicio">Fecha Inicio <p-sortIcon field="fecha_inicio"></p-sortIcon></th>
+            <th pSortableColumn="fecha_fin_estimada">Fecha Fin Est. <p-sortIcon field="fecha_fin_estimada"></p-sortIcon></th>
+            <th>Duración</th>
+            <th pSortableColumn="total">Total <p-sortIcon field="total"></p-sortIcon></th>
+            <th pSortableColumn="habilitado">Estado <p-sortIcon field="habilitado"></p-sortIcon></th>
+            <th>Acciones</th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-orden>
+        <tr>
+            <td>{{ orden.id }}</td>
+            <td>{{ orden.auto?.cliente?.nombre || orden.cliente?.nombre }}</td>
+            <td>{{ orden.auto?.patente }}</td>
+            <td>{{ orden.tecnico?.nombre }}</td>
+            <td>{{ formatDate(orden.fechaInicio || orden.fecha_inicio) }}</td>
+            <td>{{ formatDate(orden.fechaFin || orden.fecha_fin_estimada) }}</td>
+            <td>{{ calcularDuracionTotal(orden) }}</td>
+            <td>${{ orden.total }}</td>
+            <td>
+                <p-tag [value]="orden.habilitado ? 'Activa' : 'Inactiva'" [severity]="getSeverity(orden.habilitado)"></p-tag>
+                <button pButton icon="pi pi-undo" class="p-button-rounded ml-3" severity="secondary" (click)="switchStatusOrder(orden)"></button>
+            </td>
+            <td>
+                <div class="flex gap-2">
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" (click)="editOrden(orden)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" (click)="eliminarOrden(orden.id!)"></button>
+                </div>
+            </td>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+        <tr>
+            <td colspan="10" class="text-center">No hay órdenes disponibles</td>
+        </tr>
+    </ng-template>
+</p-table>
+
+<!-- Diálogo para crear orden -->
+<p-dialog header="Crear Orden de Trabajo" [(visible)]="crearOrdenDialog" [style]="{ width: '50vw' }" [modal]="true">
+    <form (ngSubmit)="saveOrden()" #ordenForm="ngForm">
+        <div class="custom-modal">
+            <!-- Primera fila - Información básica -->
+            <div class="custom-modal-row">
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="cliente">Cliente</label>
+                        <p-dropdown id="cliente" [options]="clienteOptions" [(ngModel)]="orden.cliente" optionLabel="label" optionValue="value" name="cliente" placeholder="Seleccionar cliente" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="auto">Auto</label>
+                        <p-dropdown id="auto" [options]="autoOptions" [(ngModel)]="orden.auto" optionLabel="label" optionValue="value" name="auto" placeholder="Seleccionar auto" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="tecnico">Técnico</label>
+                        <p-dropdown id="tecnico" [options]="tecnicoOptions" [(ngModel)]="orden.tecnico" optionLabel="label" optionValue="value" name="tecnico" placeholder="Seleccionar técnico" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 date-field">
+                    <div class="flex-1 first-row-mb">
+                        <div class="p-field">
+                            <label for="fecha_inicio">Fecha de inicio</label>
+                            <p-datepicker id="fecha_inicio" [(ngModel)]="orden.fecha_inicio" name="fecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="p-field">
+                            <label for="fecha_fin_estimada">Fecha fin estimada</label>
+                            <p-datepicker id="fecha_fin_estimada" [(ngModel)]="orden.fecha_fin_estimada" name="fecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Tercera fila - Detalles de orden y botones de acción -->
+            <div class="custom-modal-row">
+                <div class="custom-modal-row-header">
+                    <p><b>Detalle de servicios</b></p>
+                    <div class="flex flex-wrap justify-between mb-2">
+                        <button pButton type="button" icon="pi pi-plus" label="Agregar servicio" (click)="openNewDetalle()" class="p-button-success"></button>
+                    </div>
+                </div>
+
+                <p-table [value]="orden.detalle || []" [responsive]="true">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Minutos</th>
+                            <th>Costo</th>
+                            <th>Observaciones</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-detalle let-i="rowIndex">
+                        <tr>
+                            <td>{{ detalle.servicio?.nombre }}</td>
+                            <td>{{ detalle.minutos }} min</td>
+                            <td>${{ detalle.costo }}</td>
+                            <td>{{ detalle.observaciones || '-' }}</td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-warning" type="button" (click)="editDetalle(detalle, i)"></button>
+                                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-danger" type="button" (click)="removeDetalle(i)"></button>
+                                </div>
+                            </td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="5" class="text-center">No hay servicios agregados</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+
+            <!-- Segunda fila - Fechas -->
+            <div class="custom-modal-row">
+                <div class="flex-1">
+                    <div class="p-field">
+                        <label for="total">Total ($)</label>
+                        <p-inputNumber id="total" [(ngModel)]="orden.total" name="total" mode="currency" currency="ARS" [readonly]="true"> </p-inputNumber>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cuarta fila - Botones principales -->
+            <div class="flex justify-end mt-4">
+                <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text mr-2" (click)="hideCrearOrdenDialog()"></button>
+                <button pButton label="Guardar orden" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!ordenForm.valid"></button>
+            </div>
+        </div>
+    </form>
+</p-dialog>
+
+<!-- Diálogo para mostrar órdenes inactivas -->
+<p-dialog header="Órdenes Inactivas" [(visible)]="showInactiveDialog" [modal]="true" [style]="{ width: '50vw' }">
+    <p-table [value]="ordenesInactivas" [responsiveLayout]="'scroll'">
+        <ng-template pTemplate="header">
+            <tr>
+                <th>ID</th>
+                <th>Cliente</th>
+                <th>Auto</th>
+                <th>Técnico</th>
+                <th>Fecha Inicio</th>
+                <th>Fecha Fin Est.</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-orden>
+            <tr>
+                <td>{{ orden.id }}</td>
+                <td>{{ orden.auto?.cliente?.nombre || orden.cliente?.nombre }}</td>
+                <td>{{ orden.auto?.patente }}</td>
+                <td>{{ orden.tecnico?.nombre }}</td>
+                <td>{{ formatDate(orden.fechaInicio || orden.fecha_inicio) }}</td>
+                <td>{{ formatDate(orden.fechaFin || orden.fecha_fin_estimada) }}</td>
+                <td>${{ orden.total }}</td>
+                <td>
+                    <button pButton icon="pi pi-refresh" label="Restaurar" class="p-button p-button-secondary" (click)="restaurarOrden(orden.id!)"></button>
+                </td>
+            </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+            <tr>
+                <td colspan="8" class="text-center">No hay órdenes inactivas</td>
+            </tr>
+        </ng-template>
+    </p-table>
+</p-dialog>
+
+<!-- Diálogo para editar orden -->
+<p-dialog header="Editar Orden de Trabajo" [(visible)]="ordenDialog" [style]="{ width: '50vw' }" [modal]="true">
+    <form (ngSubmit)="saveEditedOrden()" #editOrdenForm="ngForm">
+        <div class="custom-modal">
+            <!-- Primera fila - Información básica -->
+            <div class="custom-modal-row">
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="editCliente">Cliente</label>
+                        <p-dropdown id="editCliente" [options]="clienteOptions" [(ngModel)]="editingOrden.cliente" optionLabel="label" optionValue="value" name="editCliente" placeholder="Seleccionar cliente" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="editAuto">Auto</label>
+                        <p-dropdown id="editAuto" [options]="autoOptions" [(ngModel)]="editingOrden.auto" optionLabel="label" optionValue="value" name="editAuto" placeholder="Seleccionar auto" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 first-row-mb">
+                    <div class="p-field">
+                        <label for="editTecnico">Técnico</label>
+                        <p-dropdown id="editTecnico" [options]="tecnicoOptions" [(ngModel)]="editingOrden.tecnico" optionLabel="label" optionValue="value" name="editTecnico" placeholder="Seleccionar técnico" required> </p-dropdown>
+                    </div>
+                </div>
+                <div class="flex-1 date-field">
+                    <div class="flex-1 first-row-mb">
+                        <div class="p-field">
+                            <label for="editFecha_inicio">Fecha de inicio</label>
+                            <p-datepicker id="editFecha_inicio" [(ngModel)]="editingOrden.fecha_inicio" name="editFecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="p-field">
+                            <label for="editFecha_fin_estimada">Fecha fin estimada</label>
+                            <p-datepicker id="editFecha_fin_estimada" [(ngModel)]="editingOrden.fecha_fin_estimada" name="editFecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="p-field">
+                            <label for="editFecha_fin_real">Fecha fin real</label>
+                            <p-datepicker id="editFecha_fin_real" [(ngModel)]="editingOrden.fecha_fin_real" name="editFecha_fin_real" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"> </p-datepicker>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tercera fila - Detalles de orden y botones de acción -->
+            <div class="custom-modal-row">
+                <div class="custom-modal-row-header">
+                    <p><b>Detalle de servicios</b></p>
+                </div>
+
+                <p-table [value]="editingOrden.detalle || []" [responsive]="true">
+                    <ng-template pTemplate="header">
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Minutos</th>
+                            <th>Costo</th>
+                            <th>Observaciones</th>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-detalle>
+                        <tr>
+                            <td>{{ detalle.servicio?.nombre }}</td>
+                            <td>{{ detalle.minutos }} min</td>
+                            <td>${{ detalle.costo }}</td>
+                            <td>{{ detalle.observaciones || '-' }}</td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="emptymessage">
+                        <tr>
+                            <td colspan="4" class="text-center">No hay servicios asignados</td>
+                        </tr>
+                    </ng-template>
+                    <ng-template pTemplate="footer">
+                        <tr>
+                            <td colspan="2" class="text-right font-bold">Total:</td>
+                            <td colspan="2" class="text-left font-bold">${{ editingOrden.total }}</td>
+                        </tr>
+                    </ng-template>
+                </p-table>
+            </div>
+
+            <!-- Segunda fila - Total -->
+            <div class="custom-modal-row">
+                <div class="flex-1">
+                    <div class="p-field">
+                        <label for="editTotal">Total ($)</label>
+                        <p-inputNumber id="editTotal" [(ngModel)]="editingOrden.total" name="editTotal" mode="currency" currency="ARS" [readonly]="true"> </p-inputNumber>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cuarta fila - Botones principales -->
+            <div class="flex justify-end mt-4">
+                <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text mr-2" (click)="hideDialog()"></button>
+                <button pButton label="Guardar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!editOrdenForm.valid"></button>
+            </div>
+        </div>
+    </form>
+</p-dialog>
+
+<!-- Diálogo para añadir/editar detalles -->
+<p-dialog header="Detalle de Servicio" [(visible)]="detalleDialog" [style]="{ width: '500px' }" [modal]="true">
+    <div class="p-fluid custom-modal">
+        <div class="p-field mb-3">
+            <label for="servicio">Servicio</label>
+            <p-dropdown id="servicio" [options]="servicioOptions" [(ngModel)]="detalleActual.servicio" optionLabel="label" optionValue="value" placeholder="Seleccionar servicio" required> </p-dropdown>
+        </div>
+        <div class="p-field mb-3">
+            <label for="minutos">Minutos</label>
+            <p-inputNumber id="minutos" [(ngModel)]="detalleActual.minutos" [min]="0" placeholder="Minutos estimados"> </p-inputNumber>
+        </div>
+        <div class="p-field mb-3">
+            <label for="observaciones">Observaciones</label>
+            <input id="observaciones" pInputText [(ngModel)]="detalleActual.observaciones" placeholder="Observaciones sobre el servicio" />
+        </div>
+    </div>
+    <div class="flex justify-end gap-2 mt-4">
+        <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="detalleDialog = false"></button>
+        <button pButton type="button" label="Guardar" icon="pi pi-check" (click)="hasEditIndex() ? saveEditedDetalle() : addDetalle()"></button>
+    </div>
+</p-dialog>
