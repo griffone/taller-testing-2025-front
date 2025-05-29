@@ -69,9 +69,12 @@ export class OrdenService {
   }
   
   findPaginado(page: number = 0, size: number = 10): Observable<OrdenTrabajo[]> {
+    // Ensure page is a number and not negative
+    const pageIndex = Math.max(0, page);
     const params = new HttpParams()
-      .set('page', page.toString())
+      .set('page', pageIndex.toString())
       .set('size', size.toString());
+    console.log(`Requesting page ${pageIndex} with size ${size}`);
     return this.http.get<OrdenTrabajo[]>(`${this.baseUrl}/mostrarpaginado`, { params });
   }
   

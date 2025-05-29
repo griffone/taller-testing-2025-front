@@ -154,11 +154,32 @@ export class OrdenComponent implements OnInit {
 
   loadOrdenes() {
     this.loading = true;
-    this.ordenService.findPaginado(this.currentPage, this.pageSize).subscribe({
+    // Ensure pagination parameters are properly set
+    // Make sure the page index is valid (matches backend expectation)
+    const page = typeof this.currentPage === 'number' ? this.currentPage : 0;
+    const size = this.pageSize || 10;
+    
+    console.log(`Loading orders with page=${page}, size=${size}`);
+    
+    this.ordenService.findPaginado(page, size).subscribe({
       next: (data) => {
-        this.ordenes = data;
+        if (data && data.length > 0) {
+          this.ordenes = data;
+          console.log('Ordenes loaded:', this.ordenes.length);
+        } else {
+          console.log('No orders found for this page, trying page 0');
+          // If no results and we're not on page 0, reset to first page
+          if (page > 0) {
+            this.currentPage = 0;
+            this.loading = false;
+            this.loadOrdenes();
+            return;
+          }
+        }
         this.loading = false;
-        console.log('Ordenes loaded', this.ordenes);
+        
+        // Also refresh total records count to ensure pagination info is current
+        this.getTotalRecords();
       },
       error: (error) => {
         this.messageService.add({
@@ -167,7 +188,7 @@ export class OrdenComponent implements OnInit {
           detail: 'Error al cargar las órdenes de trabajo'
         });
         this.loading = false;
-        console.error('Error loading ordenes', error);
+        console.error('Error loading ordenes:', error);
       }
     });
   }
@@ -250,9 +271,10 @@ export class OrdenComponent implements OnInit {
     this.ordenService.longitud().subscribe({
       next: (total) => {
         this.totalRecords = total;
+        console.log('Total records:', total);
       },
       error: (error) => {
-        console.error('Error getting total records', error);
+        console.error('Error getting total records:', error);
       }
     });
   }
@@ -635,8 +657,12 @@ export class OrdenComponent implements OnInit {
 
   // Método para manejar la paginación
   paginate(event: any) {
+    // PrimeNG pagination is 0-based internally but displays as 1-based in UI
+    // Make sure we're using the correct zero-based index for the backend
     this.currentPage = event.page;
+    this.pageSize = event.rows;
     this.loadOrdenes();
+    console.log('Pagination event:', event);
   }
 
   // Método para cerrar diálogo
@@ -692,5 +718,32 @@ export class OrdenComponent implements OnInit {
   // Método para verificar si el detalle actual tiene un índice de edición
   hasEditIndex(): boolean {
     return 'editIndex' in this.detalleActual;
+  }
+
+  switchStatusOrder(orden: OrdenTrabajo) {
+    this.confirmationService.confirm({
+      message: `¿Está seguro que desea ${orden.habilitado ? 'deshabilitar' : 'habilitar'} esta orden?`,
+      accept: () => {
+        orden.habilitado = !orden.habilitado;
+        this.ordenService.actualizar(orden.id || 0, orden).subscribe({
+          next: () => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'Éxito',
+              detail: `Orden ${orden.habilitado ? 'habilitada' : 'deshabilitada'} correctamente`
+            });
+            this.loadOrdenes();
+          },
+          error: (error) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: `Error al ${orden.habilitado ? 'habilitar' : 'deshabilitar'} la orden`
+            });
+            console.error('Error toggling orden status', error);
+          }
+        });
+      }
+    });
   }
 }

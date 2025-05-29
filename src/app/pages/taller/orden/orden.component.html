@@ -11,7 +11,19 @@
 </div>
 
 <!-- Tabla con lista de órdenes -->
-<p-table #dt [value]="ordenes" [paginator]="true" [rows]="pageSize" [loading]="loading" [rowHover]="true" [responsiveLayout]="'scroll'" [totalRecords]="totalRecords" (onPage)="paginate($event)" styleClass="p-datatable-gridlines">
+<p-table #dt [value]="ordenes" 
+    [paginator]="true" 
+    [rows]="pageSize" 
+    [loading]="loading" 
+    [rowHover]="true" 
+    [responsiveLayout]="'scroll'" 
+    [totalRecords]="totalRecords" 
+    [lazy]="true" 
+    [showCurrentPageReport]="true" 
+    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} órdenes" 
+    [rowsPerPageOptions]="[5, 10, 20]" 
+    (onPage)="paginate($event)" 
+    styleClass="p-datatable-gridlines">
     <ng-template pTemplate="caption">
         <div class="flex justify-between items-center">
             <span class="font-bold text-xl">Lista de Órdenes de Trabajo</span>
@@ -63,6 +75,7 @@
             <td>${{ orden.total }}</td>
             <td>
                 <p-tag [value]="orden.habilitado ? 'Activa' : 'Inactiva'" [severity]="getSeverity(orden.habilitado)"></p-tag>
+                <button pButton icon="pi pi-undo" class="p-button-rounded ml-3" severity="secondary" (click)="switchStatusOrder(orden)"></button>
             </td>
             <td>
                 <div class="flex gap-2">
@@ -216,56 +229,57 @@
 </p-dialog>
 
 <!-- Diálogo para editar orden -->
-<p-dialog header="Editar Orden de Trabajo" [(visible)]="ordenDialog" [style]="{ width: '80vw' }" [modal]="true">
+<p-dialog header="Editar Orden de Trabajo" [(visible)]="ordenDialog" [style]="{ width: '50vw' }" [modal]="true">
     <form (ngSubmit)="saveEditedOrden()" #editOrdenForm="ngForm">
-        <div class="p-fluid flex flex-column gap-4">
+        <div class="custom-modal">
             <!-- Primera fila - Información básica -->
-            <div class="">
-                <div class="flex-1">
+            <div class="custom-modal-row">
+                <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editCliente">Cliente</label>
                         <p-dropdown id="editCliente" [options]="clienteOptions" [(ngModel)]="editingOrden.cliente" optionLabel="label" optionValue="value" name="editCliente" placeholder="Seleccionar cliente" required> </p-dropdown>
                     </div>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editAuto">Auto</label>
                         <p-dropdown id="editAuto" [options]="autoOptions" [(ngModel)]="editingOrden.auto" optionLabel="label" optionValue="value" name="editAuto" placeholder="Seleccionar auto" required> </p-dropdown>
                     </div>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editTecnico">Técnico</label>
                         <p-dropdown id="editTecnico" [options]="tecnicoOptions" [(ngModel)]="editingOrden.tecnico" optionLabel="label" optionValue="value" name="editTecnico" placeholder="Seleccionar técnico" required> </p-dropdown>
                     </div>
                 </div>
+                <div class="flex-1 date-field">
+                    <div class="flex-1 first-row-mb">
+                        <div class="p-field">
+                            <label for="editFecha_inicio">Fecha de inicio</label>
+                            <p-datepicker id="editFecha_inicio" [(ngModel)]="editingOrden.fecha_inicio" name="editFecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="p-field">
+                            <label for="editFecha_fin_estimada">Fecha fin estimada</label>
+                            <p-datepicker id="editFecha_fin_estimada" [(ngModel)]="editingOrden.fecha_fin_estimada" name="editFecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="p-field">
+                            <label for="editFecha_fin_real">Fecha fin real</label>
+                            <p-datepicker id="editFecha_fin_real" [(ngModel)]="editingOrden.fecha_fin_real" name="editFecha_fin_real" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"> </p-datepicker>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Segunda fila - Fechas -->
-            <div class="">
-                <div class="flex-1">
-                    <div class="p-field">
-                        <label for="editFecha_inicio">Fecha de inicio</label>
-                        <p-datepicker id="editFecha_inicio" [(ngModel)]="editingOrden.fecha_inicio" name="editFecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
-                    </div>
+            <!-- Tercera fila - Detalles de orden y botones de acción -->
+            <div class="custom-modal-row">
+                <div class="custom-modal-row-header">
+                    <p><b>Detalle de servicios</b></p>
                 </div>
-                <div class="flex-1">
-                    <div class="p-field">
-                        <label for="editFecha_fin_estimada">Fecha fin estimada</label>
-                        <p-datepicker id="editFecha_fin_estimada" [(ngModel)]="editingOrden.fecha_fin_estimada" name="editFecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
-                    </div>
-                </div>
-                <div class="flex-1">
-                    <div class="p-field">
-                        <label for="editFecha_fin_real">Fecha fin real</label>
-                        <p-datepicker id="editFecha_fin_real" [(ngModel)]="editingOrden.fecha_fin_real" name="editFecha_fin_real" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }"> </p-datepicker>
-                    </div>
-                </div>
-            </div>
 
-            <!-- Tercera fila - Detalles -->
-            <div>
-                <h3>Detalle de servicios</h3>
                 <p-table [value]="editingOrden.detalle || []" [responsive]="true">
                     <ng-template pTemplate="header">
                         <tr>
@@ -297,10 +311,20 @@
                 </p-table>
             </div>
 
-            <!-- Cuarta fila - Botones -->
-            <div class="flex justify-end gap-2 mt-4">
-                <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text" (click)="hideDialog()"></button>
-                <button pButton type="submit" label="Guardar" icon="pi pi-check" [disabled]="!editOrdenForm.valid"></button>
+            <!-- Segunda fila - Total -->
+            <div class="custom-modal-row">
+                <div class="flex-1">
+                    <div class="p-field">
+                        <label for="editTotal">Total ($)</label>
+                        <p-inputNumber id="editTotal" [(ngModel)]="editingOrden.total" name="editTotal" mode="currency" currency="ARS" [readonly]="true"> </p-inputNumber>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cuarta fila - Botones principales -->
+            <div class="flex justify-end mt-4">
+                <button pButton type="button" label="Cancelar" icon="pi pi-times" class="p-button-text mr-2" (click)="hideDialog()"></button>
+                <button pButton label="Guardar" type="submit" icon="pi pi-check" iconPos="right" [disabled]="!editOrdenForm.valid"></button>
             </div>
         </div>
     </form>
