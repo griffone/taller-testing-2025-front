@@ -51,6 +51,7 @@ export class AutoComponent implements OnInit {
   modeloOptions: any[] = [];
   clienteOptions: any[] = [];
   selectedMarca: any = null;
+  selectedEditMarca: any = null;
 
   constructor(
     private autoService: AutoService,
@@ -107,11 +108,14 @@ export class AutoComponent implements OnInit {
   loadModelosByMarca(marcaId: number) {
     // Guardamos el modelo actual para comparar
     const currentModeloId = this.editingAuto?.modelo?.id;
+    const isEditMode = this.autoDialog; // Verificamos si estamos en modo edición
     
     // Reseteamos el modelo seleccionado solo si fue cambiado manualmente por el usuario
-    // Si la marca actual no coincide con la marca del modelo, es un cambio manual
-    if (this.editingAuto?.modelo?.marca?.id !== marcaId) {
+    if (isEditMode && this.editingAuto?.modelo?.marca?.id !== marcaId) {
       this.editingAuto.modelo = null;
+    } else if (!isEditMode) {
+      // En modo creación, siempre reset el modelo
+      this.auto.modelo = null;
     }
     
     console.log('Cargando modelos para la marca ID:', marcaId);
@@ -124,7 +128,7 @@ export class AutoComponent implements OnInit {
         console.log('Modelos cargados:', this.modeloOptions);
         
         // Si teníamos un modelo seleccionado y coincide con la marca, lo restauramos
-        if (currentModeloId) {
+        if (isEditMode && currentModeloId) {
           const modeloFound = this.modeloOptions.find(m => m.value.id === currentModeloId);
           if (modeloFound) {
             console.log('Restaurando modelo previo:', modeloFound);
@@ -164,6 +168,7 @@ export class AutoComponent implements OnInit {
     });
   }
 
+  
   saveAuto() {
     if (!this.auto.cliente) {
       this.messageService.add({
@@ -188,7 +193,8 @@ export class AutoComponent implements OnInit {
         detail: 'Auto guardado correctamente'
       });
       this.loadAutos();
-      this.auto = {};
+      // Reseteo completo de todos los campos usando el método dedicado
+      this.resetForm();
       },
       error: (error) => {
       this.messageService.add({
@@ -213,7 +219,7 @@ export class AutoComponent implements OnInit {
         if (marcaEncontrada) {
           console.log('Marca encontrada:', marcaEncontrada);
           // Seleccionamos directamente el objeto completo de la opción (que ya tiene la estructura correcta)
-          this.selectedMarca = marcaEncontrada.value;
+          this.selectedEditMarca = marcaEncontrada.value;
           
           // Cargamos los modelos para esta marca
           this.loadModelosByMarca(marcaId);
@@ -358,10 +364,15 @@ export class AutoComponent implements OnInit {
 
   hideDialog() {
     this.autoDialog = false;
+    this.resetForm();
+  }
+
+  resetForm() {
     this.editingAuto = {} as Auto;
-    this.selectedMarca = null;
-    this.modeloOptions = [];
     this.auto = {};
+    this.selectedMarca = null;
+    this.selectedEditMarca = null;
+    this.modeloOptions = [];
   }
 
   clear(table: Table) {

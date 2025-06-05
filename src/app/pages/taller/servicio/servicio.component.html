@@ -15,13 +15,13 @@
                 </div>
                 <div class="p-field">
                     <label for="precio" class="mr-3">Precio</label>
-                    <p-inputNumber class="w-48" id="precio" [(ngModel)]="servicio.precio" name="precio" placeholder="Insertar el precio" mode="currency" currency="ARS" required></p-inputNumber>
+                    <p-inputNumber class="w-48" id="precio" [(ngModel)]="servicio.precio" name="precio" placeholder="Insertar el precio" mode="currency" currency="ARS" [min]="0" required></p-inputNumber>
                 </div>
             </div>
             <div class="flex gap-4">
                 <div class="p-field">
                     <label for="minutos" class="mr-3">Minutos estimados</label>
-                    <p-inputNumber class="w-48" id="minutos" [(ngModel)]="servicio.minutosestimados" name="minutosestimados" placeholder="Tiempo estimado" required></p-inputNumber>
+                    <p-inputNumber class="w-48" id="minutos" [(ngModel)]="servicio.minutosestimados" name="minutosestimados" placeholder="Tiempo estimado" [min]="0" required></p-inputNumber>
                 </div>
             </div>
 
@@ -56,7 +56,7 @@
             <tr>
                 <td>{{ servicio.id }}</td>
                 <td>{{ servicio.nombre }}</td>
-                <td>{{ servicio.precio }}</td>
+                <td>{{ servicio.precio | currency:'ARS':'symbol-narrow':'1.2-2' }}</td>
                 <td>{{ servicio.minutosestimados }} min</td>
                 <td>
                     <p-tag [value]="servicio.estado ? 'Activo' : 'Inactivo'" [severity]="getSeverity(servicio.estado)"></p-tag>
@@ -86,11 +86,11 @@
             </div>
             <div class="p-field mt-2">
                 <label for="edit-precio">Precio</label>
-                <p-inputNumber id="edit-precio" [(ngModel)]="editingServicio.precio" name="edit-precio" mode="currency" currency="ARS" required></p-inputNumber>
+                <p-inputNumber id="edit-precio" [(ngModel)]="editingServicio.precio" name="edit-precio" mode="currency" currency="ARS" [min]="0" required></p-inputNumber>
             </div>
             <div class="p-field mt-2">
                 <label for="edit-minutos">Minutos estimados</label>
-                <p-inputNumber id="edit-minutos" [(ngModel)]="editingServicio.minutosestimados" name="edit-minutos" required></p-inputNumber>
+                <p-inputNumber id="edit-minutos" [(ngModel)]="editingServicio.minutosestimados" name="edit-minutos" [min]="0" required></p-inputNumber>
             </div>
         </form>
     </ng-template>

@@ -10,7 +10,7 @@
                     <div class="p-field">
                         <label for="patente">Patente</label>
                         <input id="patente" pInputText [(ngModel)]="auto.patente" type="text" name="patente"
-                            placeholder="Insertar la patente" required />
+                            placeholder="Insertar la patente" required (input)="auto.patente = auto.patente && auto.patente.toUpperCase()" />
                     </div>
                 </div>
                 <div class="col-12 md:col-6 lg:col-3">
@@ -76,6 +76,8 @@
     </form>
 </p-panel>
 
+<br>
+
 <p-table [value]="autos" [paginator]="true" [rows]="10" [responsive]="true"
     [globalFilterFields]="['patente','modelo.marca.nombre','modelo.nombre']" #dt>
     <ng-template pTemplate="caption">
@@ -132,11 +134,11 @@
         <div class="p-field">
             <label for="editPatente">Patente</label>
             <input type="text" pInputText id="patente" name="editPatente" [(ngModel)]="editingAuto.patente" required
-                autofocus />
+                autofocus (input)="editingAuto.patente = editingAuto.patente && editingAuto.patente.toUpperCase()" />
         </div>
         <div class="p-field">
             <label for="editMarca">Marca</label>
-            <p-dropdown [options]="marcaOptions" [(ngModel)]="selectedMarca" optionLabel="label" name="editMarca"
+            <p-dropdown [options]="marcaOptions" [(ngModel)]="selectedEditMarca" optionLabel="label" name="editMarca"
                 placeholder="Seleccionar marca" (onChange)="loadModelosByMarca($event.value.id)" required optionValue="value"></p-dropdown>
         </div>
         <div class="p-field">

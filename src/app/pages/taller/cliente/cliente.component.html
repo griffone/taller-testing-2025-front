@@ -11,8 +11,8 @@
             <div class="flex gap-4">
                 <div class="p-field">
                     <label for="dni" class="mr-3">DNI</label>
-                    <input class="w-64" id="dni" pInputText [(ngModel)]="cliente.dni" type="number" name="dni" min="0"
-                        placeholder="Insertar el DNI" required />
+                    <p-inputNumber class="w-64" id="dni" [(ngModel)]="cliente.dni" name="dni" [min]="0" 
+                        placeholder="Insertar el DNI" [showButtons]="false" required></p-inputNumber>
                 </div>
                 <div class="p-field">
                     <label for="nombre" class="mr-3">Nombre</label>
@@ -118,7 +118,7 @@
         <div class="p-fluid">
             <div class="p-field mb-3">
                 <label for="editDni">DNI</label>
-                <input id="editDni" pInputText [(ngModel)]="editingCliente.dni" type="number" name="editDni" required />
+                <p-inputNumber id="editDni" [(ngModel)]="editingCliente.dni" name="editDni" [showButtons]="false" required></p-inputNumber>
             </div>
             <div class="p-field mb-3">
                 <label for="editNombre">Nombre</label>

@@ -27,7 +27,7 @@
     <ng-template pTemplate="caption">
         <div class="flex justify-between items-center">
             <span class="font-bold text-xl">Lista de Órdenes de Trabajo</span>
-            <div class="flex gap-2">
+            <!-- <div class="flex gap-2">
                 <div class="flex flex-column gap-3 items-center">
                     <label for="nombreBusqueda">Cliente/Técnico</label>
                     <input pInputText id="nombreBusqueda" [(ngModel)]="nombreBusqueda" placeholder="Buscar..." />
@@ -46,7 +46,7 @@
                         <button pButton icon="pi pi-filter-slash" class="p-button-outlined" (click)="clear(dt)"></button>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </ng-template>
     <ng-template pTemplate="header">
@@ -101,13 +101,13 @@
                 <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="cliente">Cliente</label>
-                        <p-dropdown id="cliente" [options]="clienteOptions" [(ngModel)]="orden.cliente" optionLabel="label" optionValue="value" name="cliente" placeholder="Seleccionar cliente" required> </p-dropdown>
+                        <p-dropdown id="cliente" [options]="clienteOptions" [(ngModel)]="orden.cliente" optionLabel="label" optionValue="value" name="cliente" placeholder="Seleccionar cliente" required (onChange)="onClienteChange($event)"> </p-dropdown>
                     </div>
                 </div>
                 <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="auto">Auto</label>
-                        <p-dropdown id="auto" [options]="autoOptions" [(ngModel)]="orden.auto" optionLabel="label" optionValue="value" name="auto" placeholder="Seleccionar auto" required> </p-dropdown>
+                        <p-dropdown id="auto" [options]="filteredAutoOptions" [(ngModel)]="orden.auto" optionLabel="label" optionValue="value" name="auto" placeholder="Seleccionar auto" required (onChange)="onAutoChange($event)"> </p-dropdown>
                     </div>
                 </div>
                 <div class="flex-1 first-row-mb">
@@ -120,13 +120,13 @@
                     <div class="flex-1 first-row-mb">
                         <div class="p-field">
                             <label for="fecha_inicio">Fecha de inicio</label>
-                            <p-datepicker id="fecha_inicio" [(ngModel)]="orden.fecha_inicio" name="fecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
+                            <p-datepicker id="fecha_inicio" [(ngModel)]="orden.fecha_inicio" name="fecha_inicio" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
                         </div>
                     </div>
                     <div class="flex-1">
                         <div class="p-field">
                             <label for="fecha_fin_estimada">Fecha fin estimada</label>
-                            <p-datepicker id="fecha_fin_estimada" [(ngModel)]="orden.fecha_fin_estimada" name="fecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [minDate]="today" [style]="{ width: '100%' }" required> </p-datepicker>
+                            <p-datepicker id="fecha_fin_estimada" [(ngModel)]="orden.fecha_fin_estimada" name="fecha_fin_estimada" [showIcon]="true" dateFormat="yy-mm-dd" [style]="{ width: '100%' }" required> </p-datepicker>
                         </div>
                     </div>
                 </div>
@@ -237,13 +237,15 @@
                 <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editCliente">Cliente</label>
-                        <p-dropdown id="editCliente" [options]="clienteOptions" [(ngModel)]="editingOrden.cliente" optionLabel="label" optionValue="value" name="editCliente" placeholder="Seleccionar cliente" required> </p-dropdown>
+                        <div class="p-inputtext p-component p-filled">
+                            {{ editingOrden.auto?.cliente?.nombre || (editingOrden.cliente?.nombre ? editingOrden.cliente.nombre : 'Sin cliente asignado') }}
+                        </div>
                     </div>
                 </div>
                 <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editAuto">Auto</label>
-                        <p-dropdown id="editAuto" [options]="autoOptions" [(ngModel)]="editingOrden.auto" optionLabel="label" optionValue="value" name="editAuto" placeholder="Seleccionar auto" required> </p-dropdown>
+                        <p-dropdown id="editAuto" [options]="filteredAutoOptions" [(ngModel)]="editingOrden.auto" optionLabel="label" optionValue="value" name="editAuto" placeholder="Seleccionar auto" required (onChange)="onAutoChangeEdit($event)"> </p-dropdown>
                     </div>
                 </div>
                 <div class="flex-1 first-row-mb">
@@ -292,9 +294,9 @@
                     <ng-template pTemplate="body" let-detalle>
                         <tr>
                             <td>{{ detalle.servicio?.nombre }}</td>
-                            <td>{{ detalle.minutos }} min</td>
-                            <td>${{ detalle.costo }}</td>
-                            <td>{{ detalle.observaciones || '-' }}</td>
+                            <td>{{ detalle.minutos || detalle.minutosRealizados || 0 }} min</td>
+                            <td>${{ detalle.costo || detalle.subtotal }}</td>
+                            <td>{{ detalle.observaciones || detalle.descripcion || '-' }}</td>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="emptymessage">
@@ -335,11 +337,15 @@
     <div class="p-fluid custom-modal">
         <div class="p-field mb-3">
             <label for="servicio">Servicio</label>
-            <p-dropdown id="servicio" [options]="servicioOptions" [(ngModel)]="detalleActual.servicio" optionLabel="label" optionValue="value" placeholder="Seleccionar servicio" required> </p-dropdown>
+            <p-dropdown id="servicio" [options]="servicioOptions" [(ngModel)]="detalleActual.servicio" optionLabel="label" optionValue="value" placeholder="Seleccionar servicio" required (onChange)="onServicioChange($event)"> </p-dropdown>
         </div>
         <div class="p-field mb-3">
-            <label for="minutos">Minutos</label>
+            <label for="minutos">Minutos estimados</label>
             <p-inputNumber id="minutos" [(ngModel)]="detalleActual.minutos" [min]="0" placeholder="Minutos estimados"> </p-inputNumber>
+        </div>
+        <div class="p-field mb-3">
+            <label for="costo">Costo ($)</label>
+            <p-inputNumber id="costo" [(ngModel)]="detalleActual.costo" mode="currency" currency="ARS" [min]="0" placeholder="Costo del servicio"> </p-inputNumber>
         </div>
         <div class="p-field mb-3">
             <label for="observaciones">Observaciones</label>
