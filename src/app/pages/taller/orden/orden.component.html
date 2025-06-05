@@ -27,7 +27,7 @@
     <ng-template pTemplate="caption">
         <div class="flex justify-between items-center">
             <span class="font-bold text-xl">Lista de Órdenes de Trabajo</span>
-            <div class="flex gap-2">
+            <!-- <div class="flex gap-2">
                 <div class="flex flex-column gap-3 items-center">
                     <label for="nombreBusqueda">Cliente/Técnico</label>
                     <input pInputText id="nombreBusqueda" [(ngModel)]="nombreBusqueda" placeholder="Buscar..." />
@@ -46,7 +46,7 @@
                         <button pButton icon="pi pi-filter-slash" class="p-button-outlined" (click)="clear(dt)"></button>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </ng-template>
     <ng-template pTemplate="header">
@@ -237,7 +237,9 @@
                 <div class="flex-1 first-row-mb">
                     <div class="p-field">
                         <label for="editCliente">Cliente</label>
-                        <p-dropdown id="editCliente" [options]="clienteOptions" [(ngModel)]="editingOrden.cliente" optionLabel="label" optionValue="value" name="editCliente" placeholder="Seleccionar cliente" required (onChange)="onClienteChangeEdit($event)"> </p-dropdown>
+                        <div class="p-inputtext p-component p-filled">
+                            {{ editingOrden.auto?.cliente?.nombre || (editingOrden.cliente?.nombre ? editingOrden.cliente.nombre : 'Sin cliente asignado') }}
+                        </div>
                     </div>
                 </div>
                 <div class="flex-1 first-row-mb">
@@ -292,9 +294,9 @@
                     <ng-template pTemplate="body" let-detalle>
                         <tr>
                             <td>{{ detalle.servicio?.nombre }}</td>
-                            <td>{{ detalle.minutos }} min</td>
-                            <td>${{ detalle.costo }}</td>
-                            <td>{{ detalle.observaciones || '-' }}</td>
+                            <td>{{ detalle.minutos || detalle.minutosRealizados || 0 }} min</td>
+                            <td>${{ detalle.costo || detalle.subtotal }}</td>
+                            <td>{{ detalle.observaciones || detalle.descripcion || '-' }}</td>
                         </tr>
                     </ng-template>
                     <ng-template pTemplate="emptymessage">

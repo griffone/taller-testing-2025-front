@@ -76,6 +76,8 @@
     </form>
 </p-panel>
 
+<br>
+
 <p-table [value]="autos" [paginator]="true" [rows]="10" [responsive]="true"
     [globalFilterFields]="['patente','modelo.marca.nombre','modelo.nombre']" #dt>
     <ng-template pTemplate="caption">

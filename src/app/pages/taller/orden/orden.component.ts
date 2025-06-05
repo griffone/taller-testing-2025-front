@@ -127,8 +127,8 @@ export class OrdenComponent implements OnInit {
   }
 
   validarRangoFechas(): boolean {
-    let startDate: string | undefined;
-    let endDate: string | undefined;
+    let startDate: any;
+    let endDate: any;
     
     // Get the correct property based on which naming convention is used
     if ('fechaInicio' in this) {
@@ -148,9 +148,9 @@ export class OrdenComponent implements OnInit {
       return false;
     }
     
-    // Convert to Date objects for comparison
-    const inicio = new Date(startDate);
-    const fin = new Date(endDate);
+    // Convert to Date objects for comparison, handling both Date objects and strings
+    const inicio = startDate instanceof Date ? startDate : new Date(startDate);
+    const fin = endDate instanceof Date ? endDate : new Date(endDate);
     
     // Check if the end date is after the start date
     return fin > inicio;
@@ -170,6 +170,7 @@ export class OrdenComponent implements OnInit {
         if (data && data.length > 0) {
           this.ordenes = data;
           console.log('Ordenes loaded:', this.ordenes.length);
+          console.log('Ordenes data:', this.ordenes);
         } else {
           console.log('No orders found for this page, trying page 0');
           // If no results and we're not on page 0, reset to first page
@@ -480,14 +481,53 @@ export class OrdenComponent implements OnInit {
   }
   // Método para editar una orden existente
   editOrden(orden: OrdenTrabajo) {
+    console.log('Editando orden original:', orden);
+    
     // Hacer una copia profunda de la orden
     this.editingOrden = JSON.parse(JSON.stringify(orden));
+    
+    // Convertir fechas de ISO a objetos Date para los datepickers
+    try {
+      // Para el datepicker, necesitamos convertir a Date
+      const editingOrdenAny = this.editingOrden as any;
+      
+      // Fecha inicio - usar fechaInicio (backend) o fecha_inicio (frontend)
+      if (orden.fechaInicio) {
+        editingOrdenAny.fecha_inicio = new Date(orden.fechaInicio);
+      } else if (orden.fecha_inicio) {
+        editingOrdenAny.fecha_inicio = new Date(orden.fecha_inicio);
+      }
+      
+      // Fecha fin estimada - usar fechaFin (backend) o fecha_fin_estimada (frontend)
+      if (orden.fechaFin) {
+        editingOrdenAny.fecha_fin_estimada = new Date(orden.fechaFin);
+      } else if (orden.fecha_fin_estimada) {
+        editingOrdenAny.fecha_fin_estimada = new Date(orden.fecha_fin_estimada);
+      }
+      
+      // Si hay fecha fin real, convertirla también
+      if (orden.fecha_fin_real) {
+        editingOrdenAny.fecha_fin_real = new Date(orden.fecha_fin_real);
+      }
+      
+    } catch (error) {
+      console.error('Error al procesar fechas', error);
+    }
     
     // Si la orden tiene un cliente, filtrar los autos por ese cliente
     if (orden.cliente) {
       this.filteredAutoOptions = this.autoOptions.filter(
         autoOption => autoOption.value.cliente?.id === orden.cliente?.id
       );
+      
+      // Asegurarnos de que el cliente está preseleccionado en el dropdown
+      const clienteFound = this.clienteOptions.find(
+        opt => opt.value.id === orden.cliente.id
+      );
+      
+      if (clienteFound) {
+        this.editingOrden.cliente = clienteFound.value;
+      }
     } else {
       // Si no tiene cliente, mostrar todos los autos
       this.filteredAutoOptions = [...this.autoOptions];
@@ -495,20 +535,38 @@ export class OrdenComponent implements OnInit {
     
     // Cargar los detalles
     if (orden.id) {
-      this.ordenService.buscarDetallesPorOrden(orden.id).subscribe({
-        next: (detalles) => {
-          this.editingOrden.detalle = detalles;
-          this.ordenDialog = true;
-        },
-        error: (error) => {
-          console.error('Error loading detalles', error);
-          // Abrir el diálogo incluso si fallan los detalles
-          this.ordenDialog = true;
-        }
-      });
+      // Si ya tenemos detalles en la orden, usarlos
+      if (orden.detalle && orden.detalle.length > 0) {
+        this.editingOrden.detalle = orden.detalle.map(detalle => {
+          // Normalizar campos para la vista
+          return {
+            ...detalle,
+            // Asegurar campos necesarios para visualización
+            minutos: detalle.minutos || detalle.minutosRealizados || (detalle.servicio?.minutosestimados || 0),
+            costo: detalle.costo || detalle.subtotal || (detalle.servicio?.precio || 0)
+          };
+        });
+        this.ordenDialog = true;
+      } else {
+        // Si no hay detalles, cargarlos del backend
+        this.ordenService.buscarDetallesPorOrden(orden.id).subscribe({
+          next: (detalles) => {
+            this.editingOrden.detalle = detalles;
+            this.ordenDialog = true;
+          },
+          error: (error) => {
+            console.error('Error loading detalles', error);
+            // Abrir el diálogo incluso si fallan los detalles
+            this.ordenDialog = true;
+          }
+        });
+      }
     } else {
       this.ordenDialog = true;
     }
+    
+    // Asegurarse de que esté disponible el método de validación
+    this.editingOrden.validarRangoFechas = this.validarRangoFechas.bind(this.editingOrden);
   }
 
   // Método para guardar una orden editada
@@ -535,12 +593,30 @@ export class OrdenComponent implements OnInit {
     this.loading = true;
     const id = this.editingOrden.id;
     
+    // Convertir fechas Date a strings para el backend
+    // Obtener fechas desde el objeto con tipo any para permitir el acceso a Date
+    const fechaInicio = (this.editingOrden as any).fecha_inicio instanceof Date 
+      ? (this.editingOrden as any).fecha_inicio.toISOString() 
+      : this.editingOrden.fecha_inicio;
+    
+    const fechaFin = (this.editingOrden as any).fecha_fin_estimada instanceof Date 
+      ? (this.editingOrden as any).fecha_fin_estimada.toISOString() 
+      : this.editingOrden.fecha_fin_estimada;
+    
+    const fechaFinReal = (this.editingOrden as any).fecha_fin_real instanceof Date 
+      ? (this.editingOrden as any).fecha_fin_real.toISOString() 
+      : this.editingOrden.fecha_fin_real;
+    
     // Map frontend field names to Java field names
     const ordenToUpdate = {
       ...this.editingOrden,
-      fechaInicio: this.editingOrden.fecha_inicio,
-      fechaFin: this.editingOrden.fecha_fin_estimada
+      fechaInicio: fechaInicio,
+      fechaFin: fechaFin,
+      // Solo incluir fecha fin real si existe
+      ...(fechaFinReal ? { fechaFinReal: fechaFinReal } : {})
     };
+    
+    console.log('Orden a actualizar:', ordenToUpdate);
     
     this.ordenService.actualizar(id, ordenToUpdate).subscribe({
       next: () => {
@@ -726,7 +802,7 @@ export class OrdenComponent implements OnInit {
     
     const totalMinutos = orden.detalle.reduce((sum, detalle) => {
       // Check for both minutosRealizados (backend) and minutos (frontend) field names
-      const minutos = (detalle as any).minutosRealizados || detalle.minutos || 0;
+      const minutos = (detalle as any).servicio.minutosestimados || detalle.minutos || 0;
       return sum + minutos;
     }, 0);
     
