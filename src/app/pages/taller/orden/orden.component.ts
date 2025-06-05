@@ -67,8 +67,12 @@ export class OrdenComponent implements OnInit {
   // Opciones para dropdowns
   clienteOptions: any[] = [];
   autoOptions: any[] = [];
+  filteredAutoOptions: any[] = []; // Lista filtrada por cliente
   tecnicoOptions: any[] = [];
   servicioOptions: any[] = [];
+
+  // Lista completa de autos para filtrado
+  allAutos: any[] = [];
 
   // Detalle de orden
   detalleActual: DetalleOrdenTrabajo = {
@@ -222,14 +226,19 @@ export class OrdenComponent implements OnInit {
       }
     });
   }
-
   loadAutos() {
     this.autoService.getMostrarHabilitados().subscribe({
       next: (autos) => {
-        this.autoOptions = autos.map(auto => ({
+        // Transformar los autos en opciones para el dropdown
+        const mappedOptions = autos.map(auto => ({
           label: `${auto.patente} - ${auto.modelo.marca.nombre} ${auto.modelo.nombre}`,
           value: auto
         }));
+        
+        // Guardar las opciones de autos
+        this.autoOptions = [...mappedOptions];
+        // Inicializar también las opciones filtradas con todas las opciones
+        this.filteredAutoOptions = [...mappedOptions];
       },
       error: (error) => {
         console.error('Error loading autos', error);
@@ -299,6 +308,25 @@ export class OrdenComponent implements OnInit {
     if (!this.detalleActual.costo) {
       this.detalleActual.costo = this.detalleActual.servicio.precio;
     }
+
+    // // Validar que haya valores válidos para minutos y costo
+    // if (!this.detalleActual.minutos || this.detalleActual.minutos <= 0) {
+    //   this.messageService.add({
+    //     severity: 'error',
+    //     summary: 'Error',
+    //     detail: 'Los minutos deben ser mayores a 0'
+    //   });
+    //   return;
+    // }
+
+    // if (!this.detalleActual.costo || this.detalleActual.costo <= 0) {
+    //   this.messageService.add({
+    //     severity: 'error',
+    //     summary: 'Error',
+    //     detail: 'El costo debe ser mayor a 0'
+    //   });
+    //   return;
+    // }
 
     // Añadir el detalle a la orden
     this.orden.detalle = this.orden.detalle || [];
@@ -450,11 +478,20 @@ export class OrdenComponent implements OnInit {
       }
     });
   }
-
   // Método para editar una orden existente
   editOrden(orden: OrdenTrabajo) {
     // Hacer una copia profunda de la orden
     this.editingOrden = JSON.parse(JSON.stringify(orden));
+    
+    // Si la orden tiene un cliente, filtrar los autos por ese cliente
+    if (orden.cliente) {
+      this.filteredAutoOptions = this.autoOptions.filter(
+        autoOption => autoOption.value.cliente?.id === orden.cliente?.id
+      );
+    } else {
+      // Si no tiene cliente, mostrar todos los autos
+      this.filteredAutoOptions = [...this.autoOptions];
+    }
     
     // Cargar los detalles
     if (orden.id) {
@@ -635,7 +672,6 @@ export class OrdenComponent implements OnInit {
     this.resetDetalleActual();
     this.detalleDialog = true;
   }
-
   // Método para reiniciar el formulario de orden
   resetOrden() {
     this.orden = {
@@ -648,6 +684,9 @@ export class OrdenComponent implements OnInit {
       detalle: []
     };
     this.orden.validarRangoFechas = this.validarRangoFechas.bind(this.orden);
+    
+    // Restaurar todas las opciones de autos al resetear
+    this.filteredAutoOptions = [...this.autoOptions];
   }
 
   // Método para obtener la clase CSS de severidad según el estado
@@ -745,5 +784,116 @@ export class OrdenComponent implements OnInit {
         });
       }
     });
+  }
+
+  // Método para filtrar autos por cliente
+  filterAutosByCliente(clienteId: number | null) {
+    if (!clienteId) {
+      this.filteredAutoOptions = this.autoOptions;
+      return;
+    }
+    
+    // Filtrar la lista de autos según el cliente seleccionado
+    this.filteredAutoOptions = this.autoOptions.filter(auto => auto.value.cliente?.id === clienteId);
+  }
+
+  // Método para filtrar autos cuando se selecciona un cliente
+  onClienteChange(event: any) {
+    const selectedCliente = event.value;
+    if (!selectedCliente) {
+      // Si no hay cliente seleccionado, mostrar todos los autos
+      this.filteredAutoOptions = [...this.autoOptions];
+      return;
+    }
+    
+    // Filtrar autos por cliente seleccionado
+    this.filteredAutoOptions = this.autoOptions.filter(
+      autoOption => autoOption.value.cliente?.id === selectedCliente.id
+    );
+    
+    // Limpiar la selección del auto actual
+    this.orden.auto = null;
+    
+    // Mostrar mensaje si no hay autos asociados a este cliente
+    if (this.filteredAutoOptions.length === 0) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: 'Este cliente no tiene autos registrados'
+      });
+    }
+  }
+  
+  // Método para actualizar el cliente cuando se selecciona un auto
+  onAutoChange(event: any) {
+    const selectedAuto = event.value;
+    if (selectedAuto && selectedAuto.cliente) {
+      // Buscar el cliente en las opciones disponibles
+      const clienteFound = this.clienteOptions.find(
+        opt => opt.value.id === selectedAuto.cliente.id
+      );
+      
+      if (clienteFound) {
+        // Actualizar el cliente en la orden
+        this.orden.cliente = clienteFound.value;
+      }
+    }
+  }
+
+  // Versiones para la edición de orden
+  onClienteChangeEdit(event: any) {
+    const selectedCliente = event.value;
+    if (!selectedCliente) {
+      // Si no hay cliente seleccionado, mostrar todos los autos
+      this.filteredAutoOptions = [...this.autoOptions];
+      return;
+    }
+    
+    // Filtrar autos por cliente seleccionado
+    this.filteredAutoOptions = this.autoOptions.filter(
+      autoOption => autoOption.value.cliente?.id === selectedCliente.id
+    );
+    
+    // Limpiar la selección del auto actual
+    this.editingOrden.auto = null;
+    
+    // Mostrar mensaje si no hay autos asociados a este cliente
+    if (this.filteredAutoOptions.length === 0) {
+      this.messageService.add({
+        severity: 'info',
+        summary: 'Información',
+        detail: 'Este cliente no tiene autos registrados'
+      });
+    }
+  }
+  
+  // Método para actualizar el cliente cuando se selecciona un auto (en edición)
+  onAutoChangeEdit(event: any) {
+    const selectedAuto = event.value;
+    if (selectedAuto && selectedAuto.cliente) {
+      // Buscar el cliente en las opciones disponibles
+      const clienteFound = this.clienteOptions.find(
+        opt => opt.value.id === selectedAuto.cliente.id
+      );
+      
+      if (clienteFound) {
+        // Actualizar el cliente en la orden
+        this.editingOrden.cliente = clienteFound.value;
+      }
+    }
+  }
+
+  // Método para actualizar minutos y costo cuando se selecciona un servicio
+  onServicioChange(event: any) {
+    const selectedServicio = event.value;
+    if (selectedServicio) {
+      // Actualizar los campos de minutos y costo con los valores del servicio seleccionado
+      this.detalleActual.minutos = selectedServicio.minutosestimados;
+      this.detalleActual.costo = selectedServicio.precio;
+    } else {
+      // Si no hay servicio seleccionado, reiniciar los valores
+      this.detalleActual.minutos = 0;
+      this.detalleActual.costo = 0;
+    }
   }
 }

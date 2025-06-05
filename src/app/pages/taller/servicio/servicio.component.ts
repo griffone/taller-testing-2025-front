@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
@@ -19,7 +19,7 @@ import { Servicio } from '../../model/servicio.model';
 @Component({
     selector: 'app-servicio',
     standalone: true,
-    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, PanelModule, TableModule, InputNumberModule, DialogModule, ToastModule, ConfirmDialogModule, TagModule],
+    imports: [CommonModule, FormsModule, ButtonModule, InputTextModule, PanelModule, TableModule, InputNumberModule, DialogModule, ToastModule, ConfirmDialogModule, TagModule, CurrencyPipe],
     providers: [MessageService, ConfirmationService],
     templateUrl: './servicio.component.html',
     styleUrl: './servicio.component.scss'
