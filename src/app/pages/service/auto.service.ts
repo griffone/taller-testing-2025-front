@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Auto {
   id?: number;
@@ -16,7 +17,7 @@ export interface Auto {
   providedIn: 'root'
 })
 export class AutoService {
-  private baseUrl = 'http://localhost:8080/auto';
+  private baseUrl = environment.apiUrl+'/auto';
 
   constructor(private http: HttpClient) { }
 

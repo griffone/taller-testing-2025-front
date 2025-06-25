@@ -1,4 +1,4 @@
 export const environment = {
     production: true,
-    apiUrl: 'http://your-production-api-url'
+    apiUrl: 'https://taller-testing-back-2025.onrender.com'
 };

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 // Modelo para DetalleOrdenTrabajo
 export interface DetalleOrdenTrabajo {
@@ -50,8 +51,8 @@ export interface OrdenTrabajo {
   providedIn: 'root'
 })
 export class OrdenService {
-  private baseUrl = 'http://localhost:8080/ordenTrabajo';
-  private detalleUrl = 'http://localhost:8080/detalleOrden';
+  private baseUrl = environment.apiUrl+'/ordenTrabajo';
+  private detalleUrl = environment.apiUrl+'/detalleOrden';
 
   constructor(private http: HttpClient) { }
 
